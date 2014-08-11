@@ -1,1 +1,1 @@
-define_module(host BINARY SOURCES host.cpp LINKS lemon-hg)
+define_module(host BINARY SOURCES host.cpp LINKS inference util)

@@ -1,15 +1,69 @@
 #include <iostream>
-#include <lemon/list_graph.h>
+
+#include <util/Logger.h>
+#include <util/ProgramOptions.h>
+
+#include <graphs/Graph.h>
+#include <graphs/RandomWeightedGraphGenerator.h>
+#include <inference/LeafConstrainedMstSearch.h>
 
 int main(int argc, char** argv) {
 
-	lemon::ListGraph graph;
+	util::ProgramOptions::init(argc, argv);
+	logger::LogManager::init();
 
-	lemon::ListGraph::Node u = graph.addNode();
-	lemon::ListGraph::Node v = graph.addNode();
-	lemon::ListGraph::Edge e = graph.addEdge(u, v);
+	host::Graph       graph;
+	host::EdgeWeights weights(graph);
 
-	std::cout << "build a graph with " << lemon::countNodes(graph) << " nodes" << std::endl;
+	RandomWeightedGraphGenerator randomWeightedGraphGenerator(5, 8, 1, 1);
+	randomWeightedGraphGenerator.fill(graph, weights);
+
+	std::cout
+			<< "generated a random graph with "
+			<< lemon::countNodes(graph)
+			<< " nodes" << std::endl;
+
+	if (lemon::countEdges(graph) < 100) {
+
+		for (host::Graph::EdgeIt edge(graph); edge != lemon::INVALID; ++edge)
+			std::cout
+					<< graph.id(graph.u(edge)) << " - "
+					<< graph.id(graph.v(edge)) << ": "
+					<< weights[edge] << std::endl;
+	}
+
+	// the minimal spanning tree
+	host::Graph::EdgeMap<bool> mst(graph);
+
+	// a selection of leaf nodes
+	host::NodeSelection leaves(graph);
+
+	// add only the first two nodes
+	host::Graph::NodeIt node(graph);
+	leaves[node] = true;
+	++node;
+	leaves[node] = true;
+
+	for (host::Graph::NodeIt node(graph); node != lemon::INVALID; ++node)
+		std::cout
+				<< "node " << graph.id(node)
+				<< " is supposed to be "
+				<< (leaves[node] ? "a" : "NO")
+				<< " leaf" << std::endl;
+
+	// search the minimal spanning tree that has the given nodes as leaves
+	LeafConstrainedMstSearch lcmstSearch(100);
+	lcmstSearch.find(graph, weights, leaves, mst);
+
+	if (lemon::countEdges(graph) < 100) {
+
+		std::cout << "minimal spanning tree is:" << std::endl;
+		for (host::Graph::EdgeIt edge(graph); edge != lemon::INVALID; ++edge)
+			std::cout
+					<< graph.id(graph.u(edge)) << " - "
+					<< graph.id(graph.v(edge)) << ": "
+					<< mst[edge] << std::endl;
+	}
 
 	return 0;
 }
