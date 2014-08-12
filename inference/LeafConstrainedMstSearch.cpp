@@ -10,6 +10,7 @@ LeafConstrainedMstSearch::find(
 		const host::EdgeWeights&   weights,
 		const host::NodeSelection& leaves,
 		host::EdgeSelection&       mst,
+		double&                    value,
 		unsigned int               maxIterations) {
 
 	// TODO: inform proximal bundle mehthod, that some of the lambdas have to 
@@ -32,6 +33,8 @@ LeafConstrainedMstSearch::find(
 	}
 
 	bundleMethod.optimize();
+
+	value = bundleMethod.getOptimalValue();
 
 	LOG_ALL(lcmstsearchlog)
 			<< "final λ is : ";

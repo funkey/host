@@ -30,6 +30,9 @@ public:
 	 * @param mst
 	 *              The edges that are part of the minimal spanning tree.
 	 *
+	 * @param value
+	 *              The length of the minimal spanning tree.
+	 *
 	 * @param maxIterations
 	 *              The maximal number of iterations to spent on the search.
 	 *
@@ -41,6 +44,7 @@ public:
 			const host::EdgeWeights&   weights,
 			const host::NodeSelection& leaves,
 			host::EdgeSelection&       mst,
+			double&                    value,
 			unsigned int               maxIterations = 1000);
 
 private:
