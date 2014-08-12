@@ -21,16 +21,54 @@ public:
 	 */
 	enum Status {
 
+		// bundle method did not start, yet
 		NotStarted,
 
+		// a hyperplane with a gradient of zero was found
 		ExactOptimiumFound,
 
+		// the gap estimate is below eps
 		Converged,
 
+		// the maximal number of iterations was exceeded
 		IterationsExceeded,
 
+		// there was an error during the optimzation
 		Error
 	};
+
+	/**
+	 * A class to represent infinite values.
+	 */
+	class InfiniteValue {
+
+	public:
+
+		InfiniteValue(bool positive = true) :
+			_positive(positive) {}
+
+		operator double() const {
+
+			if (_positive)
+				return GRB_INFINITY;
+			else
+				return -GRB_INFINITY;
+		}
+
+		InfiniteValue operator-() const {
+
+			InfiniteValue inverse(!_positive);
+			return inverse;
+		}
+
+	private:
+
+		bool _positive;
+	};
+
+	// definition of infinity, to be used to set no lower or upper bounds on 
+	// variables
+	static const InfiniteValue Infinity;
 
 	ProximalBundleMethod(
 		unsigned int numDims,
@@ -42,6 +80,27 @@ public:
 
 	~ProximalBundleMethod();
 
+	/**
+	 * Set bounds for one of the optimization variables.
+	 *
+	 * @param i
+	 *              The number (starting with zero) of the variable to set the 
+	 *              bounds for.
+	 *
+	 * @param lb, ub
+	 *              The upper and lower bound of the variable. Use Infinity or 
+	 *              -Infinity to set no bound.
+	 */
+	template <typename LowerBoundType, typename UpperBoundType>
+	void setVariableBound(unsigned int i, LowerBoundType lb, UpperBoundType ub);
+
+	/**
+	 * Set the initial position for the optimization.
+	 *
+	 * @param positionBegin, positionEnd
+	 *              Begin and end iterators for the values of the initial 
+	 *              position.
+	 */
 	template <typename IteratorType>
 	void setInitialPosition(IteratorType positionBegin, IteratorType positionEnd);
 
@@ -58,12 +117,26 @@ public:
 	template <typename IteratorType>
 	void addInitialHyperplane(IteratorType aBegin, IteratorType aEnd, double b);
 
+	/**
+	 * Start the bundle method.
+	 *
+	 * @return true, if the method converged.
+	 */
 	bool optimize();
 
+	/**
+	 * Get the optimal position after the optimization.
+	 */
 	const std::vector<double>& getOptimalPosition() const;
 
+	/**
+	 * Get the optimal value after the optimization.
+	 */
 	double getOptimalValue() const;
 
+	/**
+	 * Get the status of the bundle method.
+	 */
 	Status getStatus() const { return _status; }
 
 private:
@@ -135,6 +208,9 @@ private:
  */
 
 template <typename ValueGradientCallback>
+const typename ProximalBundleMethod<ValueGradientCallback>::InfiniteValue ProximalBundleMethod<ValueGradientCallback>::Infinity;
+
+template <typename ValueGradientCallback>
 ProximalBundleMethod<ValueGradientCallback>::ProximalBundleMethod(
 	unsigned int numDims,
 	unsigned int numIterations,
@@ -179,6 +255,15 @@ ProximalBundleMethod<ValueGradientCallback>::~ProximalBundleMethod() {
 
 	if (_variables)
 		delete[] _variables;
+}
+
+template <typename ValueGradientCallback>
+template <typename LowerBoundType, typename UpperBoundType>
+void
+ProximalBundleMethod<ValueGradientCallback>::setVariableBound(unsigned int i, LowerBoundType lb, UpperBoundType ub) {
+
+	_variables[i].set(GRB_DoubleAttr_LB, lb);
+	_variables[i].set(GRB_DoubleAttr_UB, ub);
 }
 
 template <typename ValueGradientCallback>

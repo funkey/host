@@ -22,6 +22,15 @@ LeafConstrainedMstSearch::find(
 			maxIterations,
 			valueGradientCallback);
 
+	unsigned int nodeNum = 0;
+	for (host::Graph::NodeIt node(_graph); node != lemon::INVALID; ++node) {
+
+		if (!leaves[node])
+			bundleMethod.setVariableBound(nodeNum, 0, ProximalBundleMethod<ValueGradientCallback>::Infinity);
+
+		nodeNum++;
+	}
+
 	bundleMethod.optimize();
 
 	LOG_ALL(lcmstsearchlog)
