@@ -1,129 +1,115 @@
 #include <lemon/kruskal.h>
 #include <util/Logger.h>
 #include "LeafConstrainedMstSearch.h"
+#include "ProximalBundleMethod.h"
 
 logger::LogChannel lcmstsearchlog("lcmstsearchlog", "[LeafConstrainedMstSearch] ");
 
-void
+bool
 LeafConstrainedMstSearch::find(
-		const host::Graph&         graph,
 		const host::EdgeWeights&   weights,
 		const host::NodeSelection& leaves,
-		host::EdgeSelection&       mst) {
+		host::EdgeSelection&       mst,
+		unsigned int               maxIterations) {
 
-	host::NodeWeights   lambdas(graph);
-	host::EdgeWeights   currentWeights(graph);
+	// TODO: inform proximal bundle mehthod, that some of the lambdas have to 
+	// stay positive
 
-	bool noViolation = false;
+	ValueGradientCallback valueGradientCallback(*this, weights, leaves, mst);
 
-	for (unsigned int i = 0; i < _maxIterations; i++) {
+	ProximalBundleMethod<ValueGradientCallback> bundleMethod(
+			lemon::countNodes(_graph),
+			maxIterations,
+			valueGradientCallback);
 
-		updateCurrentWeights(graph, weights, lambdas, currentWeights);
-
-		getCurrentMst(graph, currentWeights, mst);
-
-		noViolation = updateLambdas(graph, mst, leaves, lambdas);
-
-		if (noViolation) {
-
-			LOG_USER(lcmstsearchlog)
-					<< "minimal spanning tree with requested leaf nodes found"
-					<< std::endl;
-			break;
-		}
-	}
-
-	if (!noViolation)
-		LOG_USER(lcmstsearchlog)
-				<< "exceeded maximal number of iterations ("
-				<< _maxIterations << ") -- aborting search"
-				<< std::endl;
+	bundleMethod.optimize();
 
 	LOG_ALL(lcmstsearchlog)
 			<< "final λ is : ";
-	for (host::Graph::NodeIt node(graph); node != lemon::INVALID; ++node)
-		LOG_ALL(lcmstsearchlog) << graph.id(node) << ": " << lambdas[node] << ", ";
+	for (host::Graph::NodeIt node(_graph); node != lemon::INVALID; ++node)
+		LOG_ALL(lcmstsearchlog) << _graph.id(node) << ": " << _lambdas[node] << ", ";
 	LOG_ALL(lcmstsearchlog) << std::endl;
 
 	LOG_ALL(lcmstsearchlog)
 			<< "final weights are:" << std::endl;
-	for (host::Graph::EdgeIt edge(graph); edge != lemon::INVALID; ++edge)
+	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
 		LOG_ALL(lcmstsearchlog)
-				<< graph.id(graph.u(edge)) << " - "
-				<< graph.id(graph.v(edge)) << ": "
-				<< currentWeights[edge] << std::endl;
+				<< _graph.id(_graph.u(edge)) << " - "
+				<< _graph.id(_graph.v(edge)) << ": "
+				<< _currentWeights[edge] << std::endl;
+
+	if (bundleMethod.getStatus() == ProximalBundleMethod<ValueGradientCallback>::ExactOptimiumFound)
+		return true;
+
+	return false;
 }
 
 void
-LeafConstrainedMstSearch::updateCurrentWeights(
-		const host::Graph&       graph,
-		const host::EdgeWeights& weights,
-		const host::NodeWeights& lambdas,
-		host::EdgeWeights& currentWeights) {
+LeafConstrainedMstSearch::setLambdas(const std::vector<double>& x) {
 
-	for (host::Graph::EdgeIt edge(graph); edge != lemon::INVALID; ++edge)
-		currentWeights[edge] = weights[edge] - lambdas[graph.u(edge)] - lambdas[graph.v(edge)];
+	unsigned int nodeNum = 0;
+
+	for (host::Graph::NodeIt node(_graph); node != lemon::INVALID; ++node) {
+
+		_lambdas[node] = x[nodeNum];
+		nodeNum++;
+	}
 }
 
 void
-LeafConstrainedMstSearch::getCurrentMst(
-		const host::Graph&       graph,
-		const host::EdgeWeights& weights,
-		host::EdgeSelection&     currentMst) {
+LeafConstrainedMstSearch::updateCurrentWeights(const host::EdgeWeights& originalWeights) {
 
-	lemon::kruskal(graph, weights, currentMst);
+	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
+		_currentWeights[edge] = originalWeights[edge] - _lambdas[_graph.u(edge)] - _lambdas[_graph.v(edge)];
 }
 
-bool
-LeafConstrainedMstSearch::updateLambdas(
-		const host::Graph&         graph,
+double
+LeafConstrainedMstSearch::getCurrentMst(host::EdgeSelection& currentMst) {
+
+	return lemon::kruskal(_graph, _currentWeights, currentMst);
+}
+
+void
+LeafConstrainedMstSearch::getGradient(
 		const host::EdgeSelection& currentMst,
 		const host::NodeSelection& leaves,
-		host::NodeWeights&         lambdas) {
+		std::vector<double>&       gradient) {
 
-	LOG_ALL(lcmstsearchlog) << "updating lambdas" << std::endl;
+	unsigned int nodeNum = 0;
+	for (host::Graph::NodeIt node(_graph); node != lemon::INVALID; ++node) {
 
-	bool constraintsViolated = false;
-
-	// for each node
-
-	for (host::Graph::NodeIt node(graph); node != lemon::INVALID; ++node) {
-
-		double gradient = 0.0;
+		gradient[nodeNum] = 0.0;
 		unsigned int degree = 0;
 
 		// subtract one for every edge involving this edge
-		for (host::Graph::IncEdgeIt edge(graph, node); edge != lemon::INVALID; ++edge) {
+		for (host::Graph::IncEdgeIt edge(_graph, node); edge != lemon::INVALID; ++edge) {
 
 			if (currentMst[edge])
 				degree++;
 		}
-		gradient -= degree;
+		gradient[nodeNum] -= degree;
 
 		// add one for every requested leaf node, two for all others
 		if (leaves[node])
-			gradient += 1;
+			gradient[nodeNum] += 1;
 		else
-			gradient += 2;
+			gradient[nodeNum] += 2;
 
-		// move in the direction of the gradient
-		lambdas[node] += _stepSize*gradient;
-
-		// non-leaf lambdas have to stay positive
-		if (!leaves[node])
-			lambdas[node] = std::max(0.0, lambdas[node]);
-
-		// check, whether this node violates the constraints
-		if ((leaves[node] && degree > 1) || (!leaves[node] && degree == 1))
-			constraintsViolated = true;
-
-		LOG_ALL(lcmstsearchlog)
-				<< "degree of node " << graph.id(node) << " is " << degree << std::endl;
+		nodeNum++;
 	}
+}
 
-	// decrease the step size
-	_stepSize *= _decceleration;
+void
+LeafConstrainedMstSearch::ValueGradientCallback::operator()(
+		const std::vector<double>& lambdas,
+		double&                    value,
+		std::vector<double>&       gradient) {
 
-	// are we done?
-	return !constraintsViolated;
+	_lcmstSearch.setLambdas(lambdas);
+
+	_lcmstSearch.updateCurrentWeights(_originalWeights);
+
+	value = _lcmstSearch.getCurrentMst(_mst);
+
+	_lcmstSearch.getGradient(_mst, _leaves, gradient);
 }

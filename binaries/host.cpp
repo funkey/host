@@ -48,12 +48,15 @@ int main(int argc, char** argv) {
 		std::cout
 				<< "node " << graph.id(node)
 				<< " is supposed to be "
-				<< (leaves[node] ? "a" : "NO")
+				<< (leaves[node] ? "a " : "no")
 				<< " leaf" << std::endl;
 
 	// search the minimal spanning tree that has the given nodes as leaves
-	LeafConstrainedMstSearch lcmstSearch(100);
-	lcmstSearch.find(graph, weights, leaves, mst);
+	LeafConstrainedMstSearch lcmstSearch(graph);
+	bool constraintsFulfilled = lcmstSearch.find(weights, leaves, mst);
+
+	if (constraintsFulfilled)
+		std::cout << "found a minimal spanning tree that fulfills the constraints" << std::endl;
 
 	if (lemon::countEdges(graph) < 100) {
 

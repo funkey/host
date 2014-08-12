@@ -5,7 +5,7 @@
 #include <util/exceptions.h>
 #include <util/Logger.h>
 
-logger::LogChannel proxbundlemethodlog("proxbundlemethodlog", "[ProximalBundleMethod] ");
+extern logger::LogChannel proxbundlemethodlog;
 
 class BundleCannotSolveQpException : public Exception {};
 
@@ -15,6 +15,22 @@ class ProximalBundleMethod {
 	typedef std::vector<std::vector<double> > rows_type;
 
 public:
+
+	/**
+	 * The status of the bundle method.
+	 */
+	enum Status {
+
+		NotStarted,
+
+		ExactOptimiumFound,
+
+		Converged,
+
+		IterationsExceeded,
+
+		Error
+	};
 
 	ProximalBundleMethod(
 		unsigned int numDims,
@@ -47,6 +63,8 @@ public:
 	const std::vector<double>& getOptimalPosition() const;
 
 	double getOptimalValue() const;
+
+	Status getStatus() const { return _status; }
 
 private:
 
@@ -108,6 +126,8 @@ private:
 	GRBVar*     _variables;
 	GRBVar      _slack;
 	GRBQuadExpr _objective;
+
+	Status _status;
 };
 
 /*
@@ -138,7 +158,8 @@ _gradient_tp1(numDims),
 _optimalPosition(_initialPosition),
 _optimalValue(0),
 _optimalEps(-1) /* not started, yet */,
-_model(_env) {
+_model(_env),
+_status(NotStarted) {
 
 	_model.getEnv().set(GRB_IntParam_OutputFlag, 0);
 
@@ -247,6 +268,8 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 		} catch (BundleCannotSolveQpException e) {
 
 			LOG_DEBUG(proxbundlemethodlog) << "couldn't solve the QP" << std::endl;
+			_status = Error;
+
 			return false;
 		}
 
@@ -274,6 +297,7 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 			_optimalPosition = _lambda_tp1;
 			_optimalValue    = _value_tp1;
 			_optimalEps      = 0; // hurray!
+			_status          = ExactOptimiumFound;
 
 			log();
 
@@ -290,6 +314,7 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 			_optimalPosition = _lambda_tp1;
 			_optimalValue    = _value_tp1;
 			_optimalEps      = _eps_t;
+			_status          = Converged;
 
 			log();
 
@@ -327,6 +352,7 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 	}
 
 	LOG_DEBUG(proxbundlemethodlog) << "Maximum number of iterations reached -- aborting." << std::endl;
+	_status = IterationsExceeded;
 
 	return false;
 }
