@@ -73,7 +73,9 @@ private:
 
 	void updateCurrentWeights(const host::EdgeWeights& originalWeights);
 
-	double getCurrentMst(host::EdgeSelection& currentMst);
+	double getCurrentMst(
+			const host::NodeSelection& leaves,
+			host::EdgeSelection&       currentMst);
 
 	void getGradient(
 			const host::EdgeSelection& currentMst,

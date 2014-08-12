@@ -73,9 +73,23 @@ LeafConstrainedMstSearch::updateCurrentWeights(const host::EdgeWeights& original
 }
 
 double
-LeafConstrainedMstSearch::getCurrentMst(host::EdgeSelection& currentMst) {
+LeafConstrainedMstSearch::getCurrentMst(
+		const host::NodeSelection& leaves,
+		host::EdgeSelection&       currentMst) {
 
-	return lemon::kruskal(_graph, _currentWeights, currentMst);
+	double mstValue = lemon::kruskal(_graph, _currentWeights, currentMst);
+
+	// to the mst value obtained above, we have to add a constant to compensate 
+	// for the introduced lambdas
+	for (host::Graph::NodeIt node(_graph); node != lemon::INVALID; ++node) {
+
+		if (leaves[node])
+			mstValue += _lambdas[node];
+		else
+			mstValue += 2*_lambdas[node];
+	}
+
+	return mstValue;
 }
 
 void
@@ -118,7 +132,7 @@ LeafConstrainedMstSearch::ValueGradientCallback::operator()(
 
 	_lcmstSearch.updateCurrentWeights(_originalWeights);
 
-	value = _lcmstSearch.getCurrentMst(_mst);
+	value = _lcmstSearch.getCurrentMst(_leaves, _mst);
 
 	_lcmstSearch.getGradient(_mst, _leaves, gradient);
 }
