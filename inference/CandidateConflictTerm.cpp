@@ -76,8 +76,13 @@ CandidateConflictTerm::constant() {
 	double constant = 0;
 
 	// we have to add a constant to compensate for the introduced lambdas
-	for (auto exclusiveEdgesLambda : _exclusiveEdges)
-		constant -= std::get<1>(exclusiveEdgesLambda);
+	for (auto exclusiveEdgesLambda : _exclusiveEdges) {
+
+		const ExclusiveEdges& edges  = std::get<0>(exclusiveEdgesLambda);
+		double                lambda = std::get<1>(exclusiveEdgesLambda);
+
+		constant -= (static_cast<int>(edges.size()) - 1)*lambda;
+	}
 
 	return constant;
 }
