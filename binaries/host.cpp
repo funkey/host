@@ -7,7 +7,9 @@
 #include <graphs/RandomWeightedGraphGenerator.h>
 #include <graphs/WeightedGraphReader.h>
 #include <graphs/WeightedGraphWriter.h>
-#include <inference/CandidateMstSearch.h>
+#include <inference/HostSearch.h>
+#include <inference/InitialWeightTerm.h>
+#include <inference/CandidateConflictTerm.h>
 
 util::ProgramOption optionGraphFile(
 		util::_long_name        = "graph",
@@ -87,9 +89,16 @@ int main(int argc, char** argv) {
 
 	// search the minimal spanning tree under consideration of conflicting 
 	// candidates
-	CandidateMstSearch cmstSearch(graph, types);
+	HostSearch hostSearch(graph);
+
+	InitialWeightTerm     weightTerm(graph, weights);
+	CandidateConflictTerm cctTerm(graph, types);
+
+	hostSearch.addTerm(&weightTerm);
+	hostSearch.addTerm(&cctTerm);
+
 	double length;
-	bool constraintsFulfilled = cmstSearch.find(weights, mst, length, optionNumIterations.as<unsigned int>());
+	bool constraintsFulfilled = hostSearch.find(mst, length, optionNumIterations.as<unsigned int>());
 
 	if (constraintsFulfilled)
 		std::cout << "found a minimal spanning tree that fulfills the constraints" << std::endl;
