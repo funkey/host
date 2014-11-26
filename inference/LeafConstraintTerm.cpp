@@ -1,6 +1,6 @@
 #include <lemon/kruskal.h>
 #include <util/Logger.h>
-#include "LeafConstrainedMstSearch.h"
+#include "LeafConstraintTerm.h"
 #include "ProximalBundleMethod.h"
 
 logger::LogChannel lcmstsearchlog("lcmstsearchlog", "[LeafConstrainedMstSearch] ");
