@@ -7,7 +7,7 @@
 #include <graphs/RandomWeightedGraphGenerator.h>
 #include <graphs/WeightedGraphReader.h>
 #include <graphs/WeightedGraphWriter.h>
-#include <inference/LeafConstrainedMstSearch.h>
+#include <inference/CandidateMstSearch.h>
 
 util::ProgramOption optionGraphFile(
 		util::_long_name        = "graph",
@@ -26,7 +26,7 @@ util::ProgramOption optionRandomGraphEdges(
 
 util::ProgramOption optionRandomGraphMinWeight(
 		util::_long_name        = "randomGraphMinWeight",
-		util::_description_text = "Create a random graph with edge weights at lest this value.",
+		util::_description_text = "Create a random graph with edge weights at least this value.",
 		util::_default_value    = 0.0);
 
 util::ProgramOption optionRandomGraphMaxWeight(
@@ -38,6 +38,11 @@ util::ProgramOption optionWriteResult(
 		util::_long_name        = "writeResult",
 		util::_description_text = "Write the resulting MST as a graph to the given file.");
 
+util::ProgramOption optionNumIterations(
+		util::_long_name        = "numIterations",
+		util::_description_text = "The maximal number of iterations for finding the HOST.",
+		util::_default_value    = 100);
+
 int main(int argc, char** argv) {
 
 	util::ProgramOptions::init(argc, argv);
@@ -45,11 +50,12 @@ int main(int argc, char** argv) {
 
 	host::Graph       graph;
 	host::EdgeWeights weights(graph);
+	host::EdgeTypes   types(graph);
 
 	if (optionGraphFile) {
 
 		WeightedGraphReader graphReader(optionGraphFile.as<std::string>());
-		graphReader.fill(graph, weights);
+		graphReader.fill(graph, weights, types);
 
 	} else {
 
@@ -59,7 +65,7 @@ int main(int argc, char** argv) {
 				optionRandomGraphMinWeight,
 				optionRandomGraphMaxWeight);
 
-		randomWeightedGraphGenerator.fill(graph, weights);
+		randomWeightedGraphGenerator.fill(graph, weights, types);
 
 		std::cout
 				<< "generated a random graph with "
@@ -79,26 +85,11 @@ int main(int argc, char** argv) {
 	// the minimal spanning tree
 	host::Graph::EdgeMap<bool> mst(graph);
 
-	// a selection of leaf nodes
-	host::NodeSelection leaves(graph);
-
-	// add only the first two nodes
-	host::Graph::NodeIt node(graph);
-	leaves[node] = true;
-	++node;
-	leaves[node] = true;
-
-	for (host::Graph::NodeIt node(graph); node != lemon::INVALID; ++node)
-		std::cout
-				<< "node " << graph.id(node)
-				<< " is supposed to be "
-				<< (leaves[node] ? "a " : "no")
-				<< " leaf" << std::endl;
-
-	// search the minimal spanning tree that has the given nodes as leaves
-	LeafConstrainedMstSearch lcmstSearch(graph);
+	// search the minimal spanning tree under consideration of conflicting 
+	// candidates
+	CandidateMstSearch cmstSearch(graph, types);
 	double length;
-	bool constraintsFulfilled = lcmstSearch.find(weights, leaves, mst, length);
+	bool constraintsFulfilled = cmstSearch.find(weights, mst, length, optionNumIterations.as<unsigned int>());
 
 	if (constraintsFulfilled)
 		std::cout << "found a minimal spanning tree that fulfills the constraints" << std::endl;

@@ -10,7 +10,7 @@ public:
 	/**
 	 * Create a weighted graph.
 	 */
-	virtual void fill(host::Graph& graph, host::EdgeWeights& weights) = 0;
+	virtual void fill(host::Graph& graph, host::EdgeWeights& weights, host::EdgeTypes& types) = 0;
 };
 
 #endif // HOST_GRAPH_GENERATOR_H__

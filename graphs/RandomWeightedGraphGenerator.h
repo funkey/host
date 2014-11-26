@@ -14,7 +14,7 @@ public:
 		_minEdgeWeight(minEdgeWeight),
 		_maxEdgeWeight(maxEdgeWeight) {}
 
-	void fill(host::Graph& graph, host::EdgeWeights& weights);
+	void fill(host::Graph& graph, host::EdgeWeights& weights, host::EdgeTypes& types);
 
 private:
 

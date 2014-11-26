@@ -3,6 +3,15 @@
 
 #include <lemon/lgf_writer.h>
 
+std::istream& operator>>(std::istream& is, host::EdgeType& type) {
+
+	unsigned int i;
+	is >> i;
+	type = static_cast<host::EdgeType>(i);
+
+	return is;
+}
+
 class WeightedGraphWriter {
 
 public:
