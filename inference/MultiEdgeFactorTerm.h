@@ -4,14 +4,17 @@
 #include <map>
 #include <vector>
 #include "HigherOrderEdgeTerm.h"
+#include "MultiEdgeFactors.h"
+
+namespace host {
 
 class MultiEdgeFactorTerm : public HigherOrderEdgeTerm {
 
 public:
 
 	MultiEdgeFactorTerm(
-			const host::Graph&                        graph,
-			std::map<std::vector<host::Edge>, double> factors) :
+			const host::Graph&      graph,
+			const MultiEdgeFactors& factors) :
 		_graph(graph),
 		_factors(factors) {}
 
@@ -59,17 +62,21 @@ public:
 
 private:
 
+	std::string toString(const MultiEdgeFactors::Edges& edges);
+
 	const host::Graph& _graph;
 
-	std::map<std::vector<host::Edge>,double>                   _factors;
-	std::map<std::vector<host::Edge>,std::pair<double,double>> _lambdas;
+	MultiEdgeFactors                                           _factors;
+	std::map<MultiEdgeFactors::Edges,std::pair<double,double>> _lambdas;
 
 	// indicators for joint edge selection (one per factor)
-	std::map<std::vector<host::Edge>,bool> _z;
+	std::map<MultiEdgeFactors::Edges,bool> _z;
 
 	// the constant contribution of this term
 	double _constant;
 };
+
+} // namespace host
 
 #endif // HOST_INFERENCE_MULTI_EDGE_FACTOR_TERM_H__
 

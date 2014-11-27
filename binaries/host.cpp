@@ -10,11 +10,18 @@
 #include <inference/HostSearch.h>
 #include <inference/InitialWeightTerm.h>
 #include <inference/CandidateConflictTerm.h>
+#include <inference/MultiEdgeFactorTerm.h>
+#include <io/MultiEdgeFactorReader.h>
 
 util::ProgramOption optionGraphFile(
 		util::_long_name        = "graph",
 		util::_short_name       = "g",
 		util::_description_text = "Read the graph from the given file.");
+
+util::ProgramOption optionMultiEdgeFactorFile(
+		util::_long_name        = "multiEdgeFactors",
+		util::_short_name       = "m",
+		util::_description_text = "Read the multi-edge factors from the given file.");
 
 util::ProgramOption optionRandomGraphNodes(
 		util::_long_name        = "randomGraphNodes",
@@ -50,14 +57,16 @@ int main(int argc, char** argv) {
 	util::ProgramOptions::init(argc, argv);
 	logger::LogManager::init();
 
-	host::Graph       graph;
-	host::EdgeWeights weights(graph);
-	host::EdgeTypes   types(graph);
+	host::Graph            graph;
+	host::EdgeWeights      edgeWeights(graph);
+	host::EdgeLabels       edgeLabels(graph);
+	host::EdgeTypes        edgeTypes(graph);
+	host::MultiEdgeFactors multiEdgeFactors;
 
 	if (optionGraphFile) {
 
 		WeightedGraphReader graphReader(optionGraphFile.as<std::string>());
-		graphReader.fill(graph, weights, types);
+		graphReader.fill(graph, edgeWeights, edgeLabels, edgeTypes);
 
 	} else {
 
@@ -67,12 +76,18 @@ int main(int argc, char** argv) {
 				optionRandomGraphMinWeight,
 				optionRandomGraphMaxWeight);
 
-		randomWeightedGraphGenerator.fill(graph, weights, types);
+		randomWeightedGraphGenerator.fill(graph, edgeWeights, edgeLabels, edgeTypes);
 
 		std::cout
 				<< "generated a random graph with "
 				<< lemon::countNodes(graph)
 				<< " nodes" << std::endl;
+	}
+
+	if (optionMultiEdgeFactorFile) {
+
+		host::MultiEdgeFactorReader factorReader(optionMultiEdgeFactorFile.as<std::string>());
+		factorReader.fill(graph, edgeLabels, multiEdgeFactors);
 	}
 
 	if (lemon::countEdges(graph) <= 100) {
@@ -81,7 +96,7 @@ int main(int argc, char** argv) {
 			std::cout
 					<< graph.id(graph.u(edge)) << " - "
 					<< graph.id(graph.v(edge)) << ": "
-					<< weights[edge] << std::endl;
+					<< edgeWeights[edge] << std::endl;
 	}
 
 	// the minimal spanning tree
@@ -91,11 +106,13 @@ int main(int argc, char** argv) {
 	// candidates
 	HostSearch hostSearch(graph);
 
-	InitialWeightTerm     weightTerm(graph, weights);
-	CandidateConflictTerm cctTerm(graph, types);
+	host::InitialWeightTerm     weightTerm(graph, edgeWeights);
+	host::CandidateConflictTerm cctTerm(graph, edgeTypes);
+	host::MultiEdgeFactorTerm   mefTerm(graph, multiEdgeFactors);
 
 	hostSearch.addTerm(&weightTerm);
 	hostSearch.addTerm(&cctTerm);
+	hostSearch.addTerm(&mefTerm);
 
 	double length;
 	bool constraintsFulfilled = hostSearch.find(mst, length, optionNumIterations.as<unsigned int>());
@@ -118,7 +135,7 @@ int main(int argc, char** argv) {
 	if (optionWriteResult) {
 
 		WeightedGraphWriter graphWriter(optionWriteResult.as<std::string>());
-		graphWriter.write(graph, weights, mst);
+		graphWriter.write(graph, edgeWeights, mst);
 
 		std::cout << "wrote result to " << optionWriteResult.as<std::string>() << std::endl;
 	}

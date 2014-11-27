@@ -4,7 +4,11 @@
 logger::LogChannel randomwggeneratorlog("randomwggeneratorlog", "[RandomWeightedGraphGenerator] ");
 
 void
-RandomWeightedGraphGenerator::fill(host::Graph& graph, host::EdgeWeights& weights, host::EdgeTypes& types) {
+RandomWeightedGraphGenerator::fill(
+		host::Graph& graph,
+		host::EdgeWeights& weights,
+		host::EdgeLabels& labels,
+		host::EdgeTypes& types) {
 
 	std::vector<lemon::ListGraph::Node> vertices;
 

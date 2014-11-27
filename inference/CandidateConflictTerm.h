@@ -4,6 +4,8 @@
 #include <graphs/Graph.h>
 #include "HigherOrderEdgeTerm.h"
 
+namespace host {
+
 class CandidateConflictTerm : public HigherOrderEdgeTerm {
 
 public:
@@ -11,7 +13,7 @@ public:
 	/**
 	 * Construct a candidate minimal spanning tree search for the given graph.
 	 */
-	CandidateConflictTerm(const host::Graph& graph, const host::EdgeTypes& edgeTypes);
+	CandidateConflictTerm(const Graph& graph, const EdgeTypes& edgeTypes);
 
 	/**
 	 * Get the number of lambda parameters of this higher order term.
@@ -36,7 +38,7 @@ public:
 	 * Add the lambda contributions of this higher order term to the given edge 
 	 * weights.
 	 */
-	void addEdgeWeights(host::EdgeWeights& weights);
+	void addEdgeWeights(EdgeWeights& weights);
 
 	/**
 	 * Get the constant contribution of this higher order term to the objective.
@@ -49,16 +51,16 @@ public:
 	 * given iterator.
 	 */
 	void gradient(
-			const host::EdgeSelection& mst,
+			const EdgeSelection& mst,
 			Lambdas::iterator          begin,
 			Lambdas::iterator          end);
 
 private:
 
-	typedef std::vector<host::Edge>            ExclusiveEdges;
+	typedef std::vector<Edge>            ExclusiveEdges;
 	typedef std::tuple<ExclusiveEdges, double> ExclusiveEdgesLambda;
 
-	void findExclusiveEdges(const host::EdgeTypes& edgeTypes);
+	void findExclusiveEdges(const EdgeTypes& edgeTypes);
 
 	std::string toString(const ExclusiveEdges& edges);
 
@@ -66,8 +68,10 @@ private:
 	// candidates
 	std::vector<ExclusiveEdgesLambda> _exclusiveEdges;
 
-	const host::Graph& _graph;
+	const Graph& _graph;
 };
+
+} // namespace host
 
 #endif // HOST_CANDIDATE_CONFLICT_TERM_H__
 

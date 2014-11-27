@@ -2,11 +2,13 @@
 #include <util/exceptions.h>
 #include "CandidateConflictTerm.h"
 
+namespace host {
+
 logger::LogChannel cctlog("cctlog", "[CandidateConflictTerm] ");
 
 CandidateConflictTerm::CandidateConflictTerm(
-		const host::Graph& graph,
-		const host::EdgeTypes& edgeTypes) :
+		const Graph& graph,
+		const EdgeTypes& edgeTypes) :
 	_graph(graph) {
 
 	findExclusiveEdges(edgeTypes);
@@ -50,7 +52,7 @@ CandidateConflictTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_
 }
 
 void
-CandidateConflictTerm::addEdgeWeights(host::EdgeWeights& weights) {
+CandidateConflictTerm::addEdgeWeights(EdgeWeights& weights) {
 
 	for (const auto& exclusiveEdgesLambda : _exclusiveEdges) {
 
@@ -62,7 +64,7 @@ CandidateConflictTerm::addEdgeWeights(host::EdgeWeights& weights) {
 	}
 
 	LOG_ALL(cctlog) << "updated weights are:" << std::endl;
-	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
+	for (Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
 		LOG_ALL(cctlog)
 				<< "\t(" << _graph.id(_graph.u(edge)) << ", "
 				<< _graph.id(_graph.v(edge)) << ")\t"
@@ -89,7 +91,7 @@ CandidateConflictTerm::constant() {
 
 void
 CandidateConflictTerm::gradient(
-		const host::EdgeSelection& mst,
+		const EdgeSelection& mst,
 		Lambdas::iterator          begin,
 		Lambdas::iterator          end) {
 
@@ -121,24 +123,24 @@ CandidateConflictTerm::gradient(
 }
 
 void
-CandidateConflictTerm::findExclusiveEdges(const host::EdgeTypes& edgeTypes) {
+CandidateConflictTerm::findExclusiveEdges(const EdgeTypes& edgeTypes) {
 
 	// for each conflict edge
-	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge) {
+	for (Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge) {
 
-		if (edgeTypes[edge] != host::Conflict)
+		if (edgeTypes[edge] != Conflict)
 			continue;
 
 		// for each source {link,conflict} edge
-		for (host::Graph::IncEdgeIt source(_graph, _graph.u(edge)); source != lemon::INVALID; ++source) {
+		for (Graph::IncEdgeIt source(_graph, _graph.u(edge)); source != lemon::INVALID; ++source) {
 
-			if (static_cast<host::Edge>(source) == static_cast<host::Edge>(edge))
+			if (static_cast<Edge>(source) == static_cast<Edge>(edge))
 				continue;
 
-			bool sourceIsLink = (edgeTypes[source] == host::Link);
+			bool sourceIsLink = (edgeTypes[source] == Link);
 
 			// for each target {link,conflict} edge
-			for (host::Graph::IncEdgeIt target(_graph, _graph.v(edge)); target != lemon::INVALID; ++target) {
+			for (Graph::IncEdgeIt target(_graph, _graph.v(edge)); target != lemon::INVALID; ++target) {
 
 				if (source == target)
 					UTIL_THROW_EXCEPTION(
@@ -146,10 +148,10 @@ CandidateConflictTerm::findExclusiveEdges(const host::EdgeTypes& edgeTypes) {
 							"conflict edge (" << _graph.id(_graph.u(edge)) << ", " << _graph.id(_graph.v(edge)) <<
 							" has a parallel edge");
 
-				if (static_cast<host::Edge>(target) == static_cast<host::Edge>(edge))
+				if (static_cast<Edge>(target) == static_cast<Edge>(edge))
 					continue;
 
-				bool targetIsLink = (edgeTypes[target] == host::Link);
+				bool targetIsLink = (edgeTypes[target] == Link);
 
 				int numAdjacentLinks = sourceIsLink + targetIsLink;
 
@@ -191,3 +193,5 @@ CandidateConflictTerm::toString(const ExclusiveEdges& edges) {
 
 	return ss.str();
 }
+
+} // namespace host

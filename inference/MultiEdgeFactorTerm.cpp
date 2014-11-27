@@ -1,5 +1,10 @@
 #include "MultiEdgeFactorTerm.h"
 #include <util/exceptions.h>
+#include <util/Logger.h>
+
+namespace host {
+
+logger::LogChannel meflog("meflog", "[MultiEdgeFactorTerm] ");
 
 size_t
 MultiEdgeFactorTerm::numLambdas() {
@@ -27,9 +32,11 @@ MultiEdgeFactorTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_it
 
 	_constant = 0;
 
+	LOG_ALL(meflog) << "lambdas set to:" << std::endl;
+
 	for (const auto& edgesFactor : _factors) {
 
-		const std::vector<host::Edge>& edges = edgesFactor.first;
+		const MultiEdgeFactors::Edges& edges = edgesFactor.first;
 
 		double lambda1 = *i; i++;
 		double lambda2 = *i; i++;
@@ -46,10 +53,20 @@ MultiEdgeFactorTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_it
 		double w = value + 2*lambda1 - lambda2;
 
 		// z_f == 1 iff w_f < 0
-		_z[edges] = (w <= 0);
+		bool z = (w < 0);
+		_z[edges] = z;
 
-		_constant += (w <= 0)*w - lambda2;
+		_constant += z*w - lambda2;
+
+		LOG_ALL(meflog)
+				<< "\t" << toString(edges)
+				<< ": λ¹ = " << lambda1
+				<< ",\tλ² = " << lambda2
+				<< ",\tz = " << z
+				<< std::endl;
 	}
+
+	LOG_ALL(meflog) << std::endl;
 
 	if (i != end)
 		UTIL_THROW_EXCEPTION(
@@ -62,7 +79,7 @@ MultiEdgeFactorTerm::addEdgeWeights(host::EdgeWeights& weights) {
 
 	for (const auto& edgesLambdas : _lambdas) {
 
-		const std::vector<host::Edge>&  edges   = edgesLambdas.first;
+		const MultiEdgeFactors::Edges&   edges   = edgesLambdas.first;
 		const std::pair<double, double>& lambdas = edgesLambdas.second;
 
 		for (auto& edge : edges) {
@@ -90,9 +107,11 @@ MultiEdgeFactorTerm::gradient(
 
 	Lambdas::iterator i = begin;
 
+	LOG_ALL(meflog) << "gradient is:" << std::endl;
+
 	for (const auto& edgesFactor : _factors) {
 
-		const std::vector<host::Edge>& edges = edgesFactor.first;
+		const MultiEdgeFactors::Edges& edges = edgesFactor.first;
 
 		int sumEdges = 0;
 		for (const auto& edge : edges)
@@ -104,5 +123,33 @@ MultiEdgeFactorTerm::gradient(
 		// store the gradients in the same order we retrieved the lambdas
 		*i = gradient1; i++;
 		*i = gradient2; i++;
+
+		LOG_ALL(meflog)
+				<< "\t" << toString(edges)
+				<< ": δλ¹ = " << gradient1
+				<< ",\tδλ² = " << gradient2
+				<< std::endl;
 	}
+
+	LOG_ALL(meflog) << std::endl;
 }
+
+std::string
+MultiEdgeFactorTerm::toString(const MultiEdgeFactors::Edges& edges) {
+
+	std::stringstream ss;
+	bool first = true;
+
+	for (const auto& edge : edges) {
+
+		if (!first)
+			ss << "--";
+
+		ss << "(" << _graph.id(_graph.u(edge)) << ", " << _graph.id(_graph.v(edge)) << ")";
+		first = false;
+	}
+
+	return ss.str();
+}
+
+} // namespace host

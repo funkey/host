@@ -11,14 +11,15 @@ enum EdgeType {
 	Conflict = 1
 };
 
-typedef lemon::ListGraph         Graph;
-typedef Graph::Node              Node;
-typedef Graph::NodeMap<double>   NodeWeights;
-typedef Graph::NodeMap<bool>     NodeSelection;
-typedef Graph::Edge              Edge;
-typedef Graph::EdgeMap<EdgeType> EdgeTypes;
-typedef Graph::EdgeMap<double>   EdgeWeights;
-typedef Graph::EdgeMap<bool>     EdgeSelection;
+typedef lemon::ListGraph            Graph;
+typedef Graph::Node                 Node;
+typedef Graph::NodeMap<double>      NodeWeights;
+typedef Graph::NodeMap<bool>        NodeSelection;
+typedef Graph::Edge                 Edge;
+typedef Graph::EdgeMap<double>      EdgeWeights;
+typedef Graph::EdgeMap<std::string> EdgeLabels;
+typedef Graph::EdgeMap<EdgeType>    EdgeTypes;
+typedef Graph::EdgeMap<bool>        EdgeSelection;
 
 } // namespace host
 
