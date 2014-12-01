@@ -1,34 +1,34 @@
 #ifndef HOST_INFERENCE_INITIAL_WEIGHT_TERM_H__
 #define HOST_INFERENCE_INITIAL_WEIGHT_TERM_H__
 
-#include "EdgeTerm.h"
+#include "ArcTerm.h"
 
 namespace host {
 
 /**
- * An edge term contributing an initial set of edge weights.
+ * An arc term contributing an initial set of arc weights.
  */
-class InitialWeightTerm : public EdgeTerm {
+class InitialWeightTerm : public ArcTerm {
 
 public:
 
 	InitialWeightTerm(
 			const Graph& graph,
-			const EdgeWeights& weights) :
+			const ArcWeights& weights) :
 		_graph(graph),
 		_weights(weights) {}
 
-	void addEdgeWeights(EdgeWeights& weights) {
+	void addArcWeights(ArcWeights& weights) {
 
-		for (Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
-			weights[edge] += _weights[edge];
+		for (Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
+			weights[arc] += _weights[arc];
 	}
 
 private:
 
 	const Graph& _graph;
 
-	const EdgeWeights& _weights;
+	const ArcWeights& _weights;
 };
 
 } // namespace host

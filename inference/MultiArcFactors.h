@@ -7,12 +7,12 @@
 
 namespace host {
 
-class MultiEdgeFactors {
+class MultiArcFactors {
 
 public:
 
-	typedef std::vector<host::Edge> Edges;
-	typedef std::map<Edges,double>  Factors;
+	typedef std::vector<host::Arc> Arcs;
+	typedef std::map<Arcs,double>  Factors;
 
 	typedef Factors::iterator       iterator;
 	typedef Factors::const_iterator const_iterator;
@@ -22,7 +22,7 @@ public:
 	inline Factors::const_iterator begin() const { return _factors.begin(); }
 	inline Factors::const_iterator end()   const { return _factors.end(); }
 
-	inline double& operator[](const Edges& edges) { return _factors[edges]; }
+	inline double& operator[](const Arcs& arcs) { return _factors[arcs]; }
 
 	inline size_t size() const { return _factors.size(); }
 

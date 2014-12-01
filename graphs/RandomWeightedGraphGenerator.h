@@ -6,24 +6,24 @@ public:
 
 	RandomWeightedGraphGenerator(
 			unsigned int numVertices,
-			unsigned int numEdges,
-			double minEdgeWeight,
-			double maxEdgeWeight) :
+			unsigned int numArcs,
+			double minArcWeight,
+			double maxArcWeight) :
 		_numVertices(numVertices),
-		_numEdges(numEdges),
-		_minEdgeWeight(minEdgeWeight),
-		_maxEdgeWeight(maxEdgeWeight) {}
+		_numArcs(numArcs),
+		_minArcWeight(minArcWeight),
+		_maxArcWeight(maxArcWeight) {}
 
 	void fill(
 			host::Graph& graph,
-			host::EdgeWeights& weights,
-			host::EdgeLabels& labels,
-			host::EdgeTypes& types);
+			host::ArcWeights& weights,
+			host::ArcLabels& labels,
+			host::ArcTypes& types);
 
 private:
 
 	unsigned int _numVertices;
-	unsigned int _numEdges;
-	double _minEdgeWeight;
-	double _maxEdgeWeight;
+	unsigned int _numArcs;
+	double _minArcWeight;
+	double _maxArcWeight;
 };

@@ -8,10 +8,10 @@ logger::LogChannel cctlog("cctlog", "[CandidateConflictTerm] ");
 
 CandidateConflictTerm::CandidateConflictTerm(
 		const Graph& graph,
-		const EdgeTypes& edgeTypes) :
+		const ArcTypes& arcTypes) :
 	_graph(graph) {
 
-	findExclusiveEdges(edgeTypes);
+	findExclusiveArcs(arcTypes);
 }
 
 void
@@ -33,14 +33,14 @@ CandidateConflictTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_
 
 	LOG_ALL(cctlog) << "λ set to :" << std::endl;
 
-	for (auto& exclusiveEdgesLambda : _exclusiveEdges) {
+	for (auto& exclusiveArcsLambda : _exclusiveArcs) {
 
-		std::get<1>(exclusiveEdgesLambda) = *i;
+		std::get<1>(exclusiveArcsLambda) = *i;
 		i++;
 
 		LOG_ALL(cctlog)
-				<< "\t" << toString(std::get<0>(exclusiveEdgesLambda))
-				<< ":\t" << std::get<1>(exclusiveEdgesLambda) << std::endl;
+				<< "\t" << toString(std::get<0>(exclusiveArcsLambda))
+				<< ":\t" << std::get<1>(exclusiveArcsLambda) << std::endl;
 	}
 
 	LOG_ALL(cctlog) << std::endl;
@@ -52,23 +52,23 @@ CandidateConflictTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_
 }
 
 void
-CandidateConflictTerm::addEdgeWeights(EdgeWeights& weights) {
+CandidateConflictTerm::addArcWeights(ArcWeights& weights) {
 
-	for (const auto& exclusiveEdgesLambda : _exclusiveEdges) {
+	for (const auto& exclusiveArcsLambda : _exclusiveArcs) {
 
-		const ExclusiveEdges& edges  = std::get<0>(exclusiveEdgesLambda);
-		double                lambda = std::get<1>(exclusiveEdgesLambda);
+		const ExclusiveArcs& arcs   = std::get<0>(exclusiveArcsLambda);
+		double               lambda = std::get<1>(exclusiveArcsLambda);
 
-		for (const auto& edge : edges)
-			weights[edge] += lambda;
+		for (const auto& arc : arcs)
+			weights[arc] += lambda;
 	}
 
 	LOG_ALL(cctlog) << "updated weights are:" << std::endl;
-	for (Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
+	for (Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
 		LOG_ALL(cctlog)
-				<< "\t(" << _graph.id(_graph.u(edge)) << ", "
-				<< _graph.id(_graph.v(edge)) << ")\t"
-				<< weights[edge] << std::endl;
+				<< "\t(" << _graph.id(_graph.source(arc)) << ", "
+				<< _graph.id(_graph.target(arc)) << ")\t"
+				<< weights[arc] << std::endl;
 	LOG_ALL(cctlog) << std::endl;
 }
 
@@ -78,12 +78,12 @@ CandidateConflictTerm::constant() {
 	double constant = 0;
 
 	// we have to add a constant to compensate for the introduced lambdas
-	for (auto exclusiveEdgesLambda : _exclusiveEdges) {
+	for (auto exclusiveArcsLambda : _exclusiveArcs) {
 
-		const ExclusiveEdges& edges  = std::get<0>(exclusiveEdgesLambda);
-		double                lambda = std::get<1>(exclusiveEdgesLambda);
+		const ExclusiveArcs& arcs  = std::get<0>(exclusiveArcsLambda);
+		double                lambda = std::get<1>(exclusiveArcsLambda);
 
-		constant -= (static_cast<int>(edges.size()) - 1)*lambda;
+		constant -= (static_cast<int>(arcs.size()) - 1)*lambda;
 	}
 
 	return constant;
@@ -91,7 +91,7 @@ CandidateConflictTerm::constant() {
 
 void
 CandidateConflictTerm::gradient(
-		const EdgeSelection& mst,
+		const ArcSelection& mst,
 		Lambdas::iterator          begin,
 		Lambdas::iterator          end) {
 
@@ -99,17 +99,17 @@ CandidateConflictTerm::gradient(
 
 	LOG_ALL(cctlog) << "gradient is:" << std::endl;
 
-	for (const auto& exclusiveEdgesLambda : _exclusiveEdges) {
+	for (const auto& exclusiveArcsLambda : _exclusiveArcs) {
 
-		const ExclusiveEdges& edges = std::get<0>(exclusiveEdgesLambda);
+		const ExclusiveArcs& arcs = std::get<0>(exclusiveArcsLambda);
 
 		int sum = 0;
-		for (const auto& edge : edges)
-			sum += mst[edge];
+		for (const auto& arc : arcs)
+			sum += mst[arc];
 
-		*i = sum - (static_cast<int>(edges.size()) - 1);
+		*i = sum - (static_cast<int>(arcs.size()) - 1);
 
-		LOG_ALL(cctlog) << "\t" << toString(edges) << ":\t" << *i << std::endl;
+		LOG_ALL(cctlog) << "\t" << toString(arcs) << ":\t" << *i << std::endl;
 
 		i++;
 	}
@@ -123,71 +123,71 @@ CandidateConflictTerm::gradient(
 }
 
 void
-CandidateConflictTerm::findExclusiveEdges(const EdgeTypes& edgeTypes) {
+CandidateConflictTerm::findExclusiveArcs(const ArcTypes& arcTypes) {
 
-	// for each conflict edge
-	for (Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge) {
+	// for each conflict arc
+	for (Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc) {
 
-		if (edgeTypes[edge] != Conflict)
+		if (arcTypes[arc] != Conflict)
 			continue;
 
-		// for each source {link,conflict} edge
-		for (Graph::IncEdgeIt source(_graph, _graph.u(edge)); source != lemon::INVALID; ++source) {
+		// for each source {link,conflict} arc
+		for (Graph::OutArcIt source(_graph, _graph.source(arc)); source != lemon::INVALID; ++source) {
 
-			if (static_cast<Edge>(source) == static_cast<Edge>(edge))
+			if (static_cast<Arc>(source) == static_cast<Arc>(arc))
 				continue;
 
-			bool sourceIsLink = (edgeTypes[source] == Link);
+			bool sourceIsLink = (arcTypes[source] == Link);
 
-			// for each target {link,conflict} edge
-			for (Graph::IncEdgeIt target(_graph, _graph.v(edge)); target != lemon::INVALID; ++target) {
+			// for each target {link,conflict} arc
+			for (Graph::OutArcIt target(_graph, _graph.target(arc)); target != lemon::INVALID; ++target) {
 
 				if (source == target)
 					UTIL_THROW_EXCEPTION(
 							UsageError,
-							"conflict edge (" << _graph.id(_graph.u(edge)) << ", " << _graph.id(_graph.v(edge)) <<
-							" has a parallel edge");
+							"conflict arc (" << _graph.id(_graph.source(arc)) << ", " << _graph.id(_graph.target(arc)) <<
+							" has a parallel arc");
 
-				if (static_cast<Edge>(target) == static_cast<Edge>(edge))
+				if (static_cast<Arc>(target) == static_cast<Arc>(arc))
 					continue;
 
-				bool targetIsLink = (edgeTypes[target] == Link);
+				bool targetIsLink = (arcTypes[target] == Link);
 
 				int numAdjacentLinks = sourceIsLink + targetIsLink;
 
 				// link, conflict, conflict
 				// --> should not be selected at same time
 				if (numAdjacentLinks == 1)
-					_exclusiveEdges.push_back(std::make_tuple(ExclusiveEdges{source, edge, target}, 0));
+					_exclusiveArcs.push_back(std::make_tuple(ExclusiveArcs{source, arc, target}, 0));
 
 				// link, conflict, link
 				// --> the two links should not be selected at same time
 				if (numAdjacentLinks == 2)
-					_exclusiveEdges.push_back(std::make_tuple(ExclusiveEdges{source, target}, 0));
+					_exclusiveArcs.push_back(std::make_tuple(ExclusiveArcs{source, target}, 0));
 			}
 		}
 	}
 
 	LOG_ALL(cctlog)
-			<< "exclusive edges are:" << std::endl;
-	for (const auto& exclusiveEdgesLambda : _exclusiveEdges)
+			<< "exclusive arcs are:" << std::endl;
+	for (const auto& exclusiveArcsLambda : _exclusiveArcs)
 		LOG_ALL(cctlog)
-				<< "\t" << toString(std::get<0>(exclusiveEdgesLambda)) << std::endl;
+				<< "\t" << toString(std::get<0>(exclusiveArcsLambda)) << std::endl;
 	LOG_ALL(cctlog) << std::endl;
 }
 
 std::string
-CandidateConflictTerm::toString(const ExclusiveEdges& edges) {
+CandidateConflictTerm::toString(const ExclusiveArcs& arcs) {
 
 	std::stringstream ss;
 	bool first = true;
 
-	for (const auto& edge : edges) {
+	for (const auto& arc : arcs) {
 
 		if (!first)
 			ss << "--";
 
-		ss << "(" << _graph.id(_graph.u(edge)) << ", " << _graph.id(_graph.v(edge)) << ")";
+		ss << "(" << _graph.id(_graph.source(arc)) << ", " << _graph.id(_graph.target(arc)) << ")";
 		first = false;
 	}
 

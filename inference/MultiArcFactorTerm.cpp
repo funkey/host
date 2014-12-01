@@ -1,20 +1,20 @@
-#include "MultiEdgeFactorTerm.h"
+#include "MultiArcFactorTerm.h"
 #include <util/exceptions.h>
 #include <util/Logger.h>
 
 namespace host {
 
-logger::LogChannel meflog("meflog", "[MultiEdgeFactorTerm] ");
+logger::LogChannel meflog("meflog", "[MultiArcFactorTerm] ");
 
 size_t
-MultiEdgeFactorTerm::numLambdas() {
+MultiArcFactorTerm::numLambdas() {
 
 	// two lambdas per factor
 	return 2*_factors.size();
 }
 
 void
-MultiEdgeFactorTerm::lambdaBounds(
+MultiArcFactorTerm::lambdaBounds(
 		Lambdas::iterator beginLower,
 		Lambdas::iterator endLower,
 		Lambdas::iterator /*beginUpper*/,
@@ -26,7 +26,7 @@ MultiEdgeFactorTerm::lambdaBounds(
 }
 
 void
-MultiEdgeFactorTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_iterator end) {
+MultiArcFactorTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_iterator end) {
 
 	Lambdas::const_iterator i = begin;
 
@@ -34,32 +34,32 @@ MultiEdgeFactorTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_it
 
 	LOG_ALL(meflog) << "lambdas set to:" << std::endl;
 
-	for (const auto& edgesFactor : _factors) {
+	for (const auto& arcsFactor : _factors) {
 
-		const MultiEdgeFactors::Edges& edges = edgesFactor.first;
+		const MultiArcFactors::Arcs& arcs = arcsFactor.first;
 
 		double lambda1 = *i; i++;
 		double lambda2 = *i; i++;
 
 		// set the lambdas
 
-		_lambdas[edges] = std::make_pair(lambda1, lambda2);
+		_lambdas[arcs] = std::make_pair(lambda1, lambda2);
 
 		// update z on the fly
 
-		const double value = edgesFactor.second;
+		const double value = arcsFactor.second;
 
 		// the cost w_f for this z_f
 		double w = value + 2*lambda1 - lambda2;
 
 		// z_f == 1 iff w_f < 0
 		bool z = (w < 0);
-		_z[edges] = z;
+		_z[arcs] = z;
 
 		_constant += z*w - lambda2;
 
 		LOG_ALL(meflog)
-				<< "\t" << toString(edges)
+				<< "\t" << toString(arcs)
 				<< ": λ¹ = " << lambda1
 				<< ",\tλ² = " << lambda2
 				<< ",\tz = " << z
@@ -75,33 +75,33 @@ MultiEdgeFactorTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_it
 }
 
 void
-MultiEdgeFactorTerm::addEdgeWeights(host::EdgeWeights& weights) {
+MultiArcFactorTerm::addArcWeights(host::ArcWeights& weights) {
 
-	for (const auto& edgesLambdas : _lambdas) {
+	for (const auto& arcsLambdas : _lambdas) {
 
-		const MultiEdgeFactors::Edges&   edges   = edgesLambdas.first;
-		const std::pair<double, double>& lambdas = edgesLambdas.second;
+		const MultiArcFactors::Arcs&   arcs   = arcsLambdas.first;
+		const std::pair<double, double>& lambdas = arcsLambdas.second;
 
-		for (auto& edge : edges) {
+		for (auto& arc : arcs) {
 
-			// lambda1 gets subtracted from the edge weights
-			weights[edge] -= lambdas.first;
+			// lambda1 gets subtracted from the arc weights
+			weights[arc] -= lambdas.first;
 
-			// lambda2 gets added to the edge weights
-			weights[edge] += lambdas.second;
+			// lambda2 gets added to the arc weights
+			weights[arc] += lambdas.second;
 		}
 	}
 }
 
 double
-MultiEdgeFactorTerm::constant() {
+MultiArcFactorTerm::constant() {
 
 	return _constant;
 }
 
 void
-MultiEdgeFactorTerm::gradient(
-		const host::EdgeSelection& mst,
+MultiArcFactorTerm::gradient(
+		const host::ArcSelection& mst,
 		Lambdas::iterator          begin,
 		Lambdas::iterator          /*end*/) {
 
@@ -109,23 +109,23 @@ MultiEdgeFactorTerm::gradient(
 
 	LOG_ALL(meflog) << "gradient is:" << std::endl;
 
-	for (const auto& edgesFactor : _factors) {
+	for (const auto& arcsFactor : _factors) {
 
-		const MultiEdgeFactors::Edges& edges = edgesFactor.first;
+		const MultiArcFactors::Arcs& arcs = arcsFactor.first;
 
-		int sumEdges = 0;
-		for (const auto& edge : edges)
-			sumEdges += mst[edge];
+		int sumArcs = 0;
+		for (const auto& arc : arcs)
+			sumArcs += mst[arc];
 
-		double gradient1 = 2*_z[edges] - sumEdges;
-		double gradient2 = sumEdges - _z[edges] - 1;
+		double gradient1 = 2*_z[arcs] - sumArcs;
+		double gradient2 = sumArcs - _z[arcs] - 1;
 
 		// store the gradients in the same order we retrieved the lambdas
 		*i = gradient1; i++;
 		*i = gradient2; i++;
 
 		LOG_ALL(meflog)
-				<< "\t" << toString(edges)
+				<< "\t" << toString(arcs)
 				<< ": δλ¹ = " << gradient1
 				<< ",\tδλ² = " << gradient2
 				<< std::endl;
@@ -135,17 +135,17 @@ MultiEdgeFactorTerm::gradient(
 }
 
 std::string
-MultiEdgeFactorTerm::toString(const MultiEdgeFactors::Edges& edges) {
+MultiArcFactorTerm::toString(const MultiArcFactors::Arcs& arcs) {
 
 	std::stringstream ss;
 	bool first = true;
 
-	for (const auto& edge : edges) {
+	for (const auto& arc : arcs) {
 
 		if (!first)
 			ss << "--";
 
-		ss << "(" << _graph.id(_graph.u(edge)) << ", " << _graph.id(_graph.v(edge)) << ")";
+		ss << "(" << _graph.id(_graph.source(arc)) << ", " << _graph.id(_graph.target(arc)) << ")";
 		first = false;
 	}
 

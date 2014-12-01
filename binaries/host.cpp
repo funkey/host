@@ -10,37 +10,37 @@
 #include <inference/HostSearch.h>
 #include <inference/InitialWeightTerm.h>
 #include <inference/CandidateConflictTerm.h>
-#include <inference/MultiEdgeFactorTerm.h>
-#include <io/MultiEdgeFactorReader.h>
+#include <inference/MultiArcFactorTerm.h>
+#include <io/MultiArcFactorReader.h>
 
 util::ProgramOption optionGraphFile(
 		util::_long_name        = "graph",
 		util::_short_name       = "g",
 		util::_description_text = "Read the graph from the given file.");
 
-util::ProgramOption optionMultiEdgeFactorFile(
-		util::_long_name        = "multiEdgeFactors",
+util::ProgramOption optionMultiArcFactorFile(
+		util::_long_name        = "multiArcFactors",
 		util::_short_name       = "m",
-		util::_description_text = "Read the multi-edge factors from the given file.");
+		util::_description_text = "Read the multi-arc factors from the given file.");
 
 util::ProgramOption optionRandomGraphNodes(
 		util::_long_name        = "randomGraphNodes",
 		util::_description_text = "Create a random graph with this number of nodes.",
 		util::_default_value    = 100);
 
-util::ProgramOption optionRandomGraphEdges(
-		util::_long_name        = "randomGraphEdges",
-		util::_description_text = "Create a random graph with this number of edges.",
+util::ProgramOption optionRandomGraphArcs(
+		util::_long_name        = "randomGraphArcs",
+		util::_description_text = "Create a random graph with this number of arcs.",
 		util::_default_value    = 1000);
 
 util::ProgramOption optionRandomGraphMinWeight(
 		util::_long_name        = "randomGraphMinWeight",
-		util::_description_text = "Create a random graph with edge weights at least this value.",
+		util::_description_text = "Create a random graph with arc weights at least this value.",
 		util::_default_value    = 0.0);
 
 util::ProgramOption optionRandomGraphMaxWeight(
 		util::_long_name        = "randomGraphMaxWeight",
-		util::_description_text = "Create a random graph with edge weights at most this value.",
+		util::_description_text = "Create a random graph with arc weights at most this value.",
 		util::_default_value    = 1.0);
 
 util::ProgramOption optionWriteResult(
@@ -57,26 +57,26 @@ int main(int argc, char** argv) {
 	util::ProgramOptions::init(argc, argv);
 	logger::LogManager::init();
 
-	host::Graph            graph;
-	host::EdgeWeights      edgeWeights(graph);
-	host::EdgeLabels       edgeLabels(graph);
-	host::EdgeTypes        edgeTypes(graph);
-	host::MultiEdgeFactors multiEdgeFactors;
+	host::Graph           graph;
+	host::ArcWeights      arcWeights(graph);
+	host::ArcLabels       arcLabels(graph);
+	host::ArcTypes        arcTypes(graph);
+	host::MultiArcFactors multiArcFactors;
 
 	if (optionGraphFile) {
 
 		WeightedGraphReader graphReader(optionGraphFile.as<std::string>());
-		graphReader.fill(graph, edgeWeights, edgeLabels, edgeTypes);
+		graphReader.fill(graph, arcWeights, arcLabels, arcTypes);
 
 	} else {
 
 		RandomWeightedGraphGenerator randomWeightedGraphGenerator(
 				optionRandomGraphNodes,
-				optionRandomGraphEdges,
+				optionRandomGraphArcs,
 				optionRandomGraphMinWeight,
 				optionRandomGraphMaxWeight);
 
-		randomWeightedGraphGenerator.fill(graph, edgeWeights, edgeLabels, edgeTypes);
+		randomWeightedGraphGenerator.fill(graph, arcWeights, arcLabels, arcTypes);
 
 		std::cout
 				<< "generated a random graph with "
@@ -84,31 +84,31 @@ int main(int argc, char** argv) {
 				<< " nodes" << std::endl;
 	}
 
-	if (optionMultiEdgeFactorFile) {
+	if (optionMultiArcFactorFile) {
 
-		host::MultiEdgeFactorReader factorReader(optionMultiEdgeFactorFile.as<std::string>());
-		factorReader.fill(graph, edgeLabels, multiEdgeFactors);
+		host::MultiArcFactorReader factorReader(optionMultiArcFactorFile.as<std::string>());
+		factorReader.fill(graph, arcLabels, multiArcFactors);
 	}
 
-	if (lemon::countEdges(graph) <= 100) {
+	if (lemon::countArcs(graph) <= 100) {
 
-		for (host::Graph::EdgeIt edge(graph); edge != lemon::INVALID; ++edge)
+		for (host::Graph::ArcIt arc(graph); arc != lemon::INVALID; ++arc)
 			std::cout
-					<< graph.id(graph.u(edge)) << " - "
-					<< graph.id(graph.v(edge)) << ": "
-					<< edgeWeights[edge] << std::endl;
+					<< graph.id(graph.source(arc)) << " - "
+					<< graph.id(graph.target(arc)) << ": "
+					<< arcWeights[arc] << std::endl;
 	}
 
 	// the minimal spanning tree
-	host::Graph::EdgeMap<bool> mst(graph);
+	host::Graph::ArcMap<bool> mst(graph);
 
 	// search the minimal spanning tree under consideration of conflicting 
 	// candidates
 	HostSearch hostSearch(graph);
 
-	host::InitialWeightTerm     weightTerm(graph, edgeWeights);
-	host::CandidateConflictTerm cctTerm(graph, edgeTypes);
-	host::MultiEdgeFactorTerm   mefTerm(graph, multiEdgeFactors);
+	host::InitialWeightTerm     weightTerm(graph, arcWeights);
+	host::CandidateConflictTerm cctTerm(graph, arcTypes);
+	host::MultiArcFactorTerm    mefTerm(graph, multiArcFactors);
 
 	hostSearch.addTerm(&weightTerm);
 	hostSearch.addTerm(&cctTerm);
@@ -120,14 +120,14 @@ int main(int argc, char** argv) {
 	if (constraintsFulfilled)
 		std::cout << "found a minimal spanning tree that fulfills the constraints" << std::endl;
 
-	if (lemon::countEdges(graph) <= 100) {
+	if (lemon::countArcs(graph) <= 100) {
 
 		std::cout << "minimal spanning tree is:" << std::endl;
-		for (host::Graph::EdgeIt edge(graph); edge != lemon::INVALID; ++edge)
+		for (host::Graph::ArcIt arc(graph); arc != lemon::INVALID; ++arc)
 			std::cout
-					<< graph.id(graph.u(edge)) << " - "
-					<< graph.id(graph.v(edge)) << ": "
-					<< mst[edge] << std::endl;
+					<< graph.id(graph.source(arc)) << " - "
+					<< graph.id(graph.target(arc)) << ": "
+					<< mst[arc] << std::endl;
 	}
 
 	std::cout << "length of minimal spanning tree is " << length << std::endl;
@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
 	if (optionWriteResult) {
 
 		WeightedGraphWriter graphWriter(optionWriteResult.as<std::string>());
-		graphWriter.write(graph, edgeWeights, mst);
+		graphWriter.write(graph, arcWeights, mst);
 
 		std::cout << "wrote result to " << optionWriteResult.as<std::string>() << std::endl;
 	}

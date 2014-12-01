@@ -12,9 +12,9 @@ public:
 	 */
 	virtual void fill(
 			host::Graph& graph,
-			host::EdgeWeights& weights,
-			host::EdgeLabels& labels,
-			host::EdgeTypes& types) = 0;
+			host::ArcWeights& weights,
+			host::ArcLabels& labels,
+			host::ArcTypes& types) = 0;
 };
 
 #endif // HOST_GRAPH_GENERATOR_H__

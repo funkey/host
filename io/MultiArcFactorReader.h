@@ -2,21 +2,21 @@
 #define HOST_IO_MULTI_EDGE_FACTOR_READER_H__
 
 #include <graphs/Graph.h>
-#include <inference/MultiEdgeFactors.h>
+#include <inference/MultiArcFactors.h>
 
 namespace host {
 
-class MultiEdgeFactorReader {
+class MultiArcFactorReader {
 
 public:
 
-	MultiEdgeFactorReader(std::string filename) :
+	MultiArcFactorReader(std::string filename) :
 		_filename(filename) {}
 
 	void fill(
 			const Graph&      graph,
-			const EdgeLabels& labels,
-			MultiEdgeFactors& factors);
+			const ArcLabels& labels,
+			MultiArcFactors& factors);
 
 private:
 

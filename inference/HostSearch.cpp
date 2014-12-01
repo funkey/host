@@ -6,17 +6,17 @@
 logger::LogChannel hostsearchlog("hostsearchlog", "[HostSearch] ");
 
 void
-HostSearch::addTerm(EdgeTerm* term) {
+HostSearch::addTerm(ArcTerm* term) {
 
-	_edgeTerms.push_back(term);
+	_arcTerms.push_back(term);
 
-	if (HigherOrderEdgeTerm* higherOrderTerm = dynamic_cast<HigherOrderEdgeTerm*>(term))
-		_higherOrderEdgeTerms.push_back(higherOrderTerm);
+	if (HigherOrderArcTerm* higherOrderTerm = dynamic_cast<HigherOrderArcTerm*>(term))
+		_higherOrderArcTerms.push_back(higherOrderTerm);
 }
 
 bool
 HostSearch::find(
-		host::EdgeSelection& mst,
+		host::ArcSelection& mst,
 		double&              value,
 		unsigned int         maxIterations) {
 
@@ -32,7 +32,7 @@ HostSearch::find(
 	Lambdas::iterator li = lowerBounds.begin();
 	Lambdas::iterator ui = upperBounds.begin();
 
-	for (auto* term : _higherOrderEdgeTerms) {
+	for (auto* term : _higherOrderArcTerms) {
 
 		term->lambdaBounds(li, li + term->numLambdas(), ui, ui + term->numLambdas());
 
@@ -49,11 +49,11 @@ HostSearch::find(
 
 	LOG_ALL(hostsearchlog)
 			<< "final weights are:" << std::endl;
-	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
+	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
 		LOG_ALL(hostsearchlog)
-				<< _graph.id(_graph.u(edge)) << " - "
-				<< _graph.id(_graph.v(edge)) << ": "
-				<< _currentWeights[edge] << std::endl;
+				<< _graph.id(_graph.source(arc)) << " - "
+				<< _graph.id(_graph.target(arc)) << ": "
+				<< _currentWeights[arc] << std::endl;
 
 	if (bundleMethod.getStatus() == ProximalBundleMethod<ValueGradientCallback>::ExactOptimiumFound)
 		return true;
@@ -81,7 +81,7 @@ HostSearch::numLambdas() {
 
 	size_t numLambdas = 0;
 
-	for (auto* term : _higherOrderEdgeTerms)
+	for (auto* term : _higherOrderArcTerms)
 		numLambdas += term->numLambdas();
 
 	return numLambdas;
@@ -92,7 +92,7 @@ HostSearch::setLambdas(const Lambdas& x) {
 
 	Lambdas::const_iterator i = x.begin();
 
-	for (auto* term : _higherOrderEdgeTerms) {
+	for (auto* term : _higherOrderArcTerms) {
 
 		term->setLambdas(i, i + term->numLambdas());
 		i += term->numLambdas();
@@ -103,21 +103,21 @@ void
 HostSearch::updateWeights() {
 
 	// set weights to zero
-	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
-		_currentWeights[edge] = 0;
+	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
+		_currentWeights[arc] = 0;
 
-	for (auto* term : _edgeTerms)
-		term->addEdgeWeights(_currentWeights);
+	for (auto* term : _arcTerms)
+		term->addArcWeights(_currentWeights);
 }
 
 double
-HostSearch::mst(host::EdgeSelection& currentMst) {
+HostSearch::mst(host::ArcSelection& currentMst) {
 
 	double mstValue = lemon::kruskal(_graph, _currentWeights, currentMst);
 
 	// to the mst value obtained above, we have to add a constant for each 
 	// higher order term
-	for (auto* term : _higherOrderEdgeTerms)
+	for (auto* term : _higherOrderArcTerms)
 		mstValue += term->constant();
 
 	return mstValue;
@@ -125,12 +125,12 @@ HostSearch::mst(host::EdgeSelection& currentMst) {
 
 void
 HostSearch::gradient(
-			const host::EdgeSelection& mst,
+			const host::ArcSelection& mst,
 			Lambdas&                   gradient) {
 
 	Lambdas::iterator i = gradient.begin();
 
-	for (auto* term : _higherOrderEdgeTerms) {
+	for (auto* term : _higherOrderArcTerms) {
 
 		term->gradient(mst, i, i + term->numLambdas());
 		i += term->numLambdas();

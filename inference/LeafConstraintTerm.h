@@ -21,14 +21,14 @@ public:
 	 * leaves.
 	 *
 	 * @param weights
-	 *              Edge weights for the graph associated to this search.
+	 *              Arc weights for the graph associated to this search.
 	 *
 	 * @param leaves
 	 *              Marked nodes, which should form the leaves of the minimal 
 	 *              spanning tree.
 	 *
 	 * @param mst
-	 *              The edges that are part of the minimal spanning tree.
+	 *              The arcs that are part of the minimal spanning tree.
 	 *
 	 * @param value
 	 *              The length of the minimal spanning tree.
@@ -41,9 +41,9 @@ public:
 	 *              constraints could be found.
 	 */
 	bool find(
-			const host::EdgeWeights&   weights,
+			const host::ArcWeights&   weights,
 			const host::NodeSelection& leaves,
-			host::EdgeSelection&       mst,
+			host::ArcSelection&       mst,
 			double&                    value,
 			unsigned int               maxIterations = 1000);
 
@@ -55,9 +55,9 @@ private:
 
 		ValueGradientCallback(
 				LeafConstrainedMstSearch&  lcmstSearch,
-				const host::EdgeWeights&   weights,
+				const host::ArcWeights&   weights,
 				const host::NodeSelection& leaves,
-				host::EdgeSelection&       mst) :
+				host::ArcSelection&       mst) :
 			_lcmstSearch(lcmstSearch),
 			_originalWeights(weights),
 			_leaves(leaves),
@@ -68,31 +68,31 @@ private:
 	private:
 
 		LeafConstrainedMstSearch&  _lcmstSearch;
-		const host::EdgeWeights&   _originalWeights;
+		const host::ArcWeights&   _originalWeights;
 		const host::NodeSelection& _leaves;
-		host::EdgeSelection&       _mst;
+		host::ArcSelection&       _mst;
 	};
 
 	void setLambdas(const std::vector<double>& x);
 
-	void updateCurrentWeights(const host::EdgeWeights& originalWeights);
+	void updateCurrentWeights(const host::ArcWeights& originalWeights);
 
 	double getCurrentMst(
 			const host::NodeSelection& leaves,
-			host::EdgeSelection&       currentMst);
+			host::ArcSelection&       currentMst);
 
 	void getGradient(
-			const host::EdgeSelection& currentMst,
+			const host::ArcSelection& currentMst,
 			const host::NodeSelection& leaves,
 			std::vector<double>&       gradient);
 
 	const host::Graph& _graph;
 
-	// the changes to the adjacent edges of a node
+	// the changes to the adjacent arcs of a node
 	host::NodeWeights _lambdas;
 
 	// the current weights under consideration of the lambdas
-	host::EdgeWeights _currentWeights;
+	host::ArcWeights _currentWeights;
 };
 
 #endif // HOST_INFERENCE_LEAF_CONSTRAINED_MST_SEARCH_H__

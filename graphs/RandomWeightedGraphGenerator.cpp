@@ -6,25 +6,25 @@ logger::LogChannel randomwggeneratorlog("randomwggeneratorlog", "[RandomWeighted
 void
 RandomWeightedGraphGenerator::fill(
 		host::Graph& graph,
-		host::EdgeWeights& weights,
-		host::EdgeLabels& labels,
-		host::EdgeTypes& types) {
+		host::ArcWeights& weights,
+		host::ArcLabels& /*labels*/,
+		host::ArcTypes& types) {
 
-	std::vector<lemon::ListGraph::Node> vertices;
+	std::vector<host::Graph::Node> vertices;
 
 	srand(23);
 
 	for (unsigned int i = 0; i < _numVertices; i++)
 		vertices.push_back(graph.addNode());
 
-	for (unsigned int i = 0; i < _numEdges; i++) {
+	for (unsigned int i = 0; i < _numArcs; i++) {
 
-		lemon::ListGraph::Node u;
-		lemon::ListGraph::Node v;
+		host::Graph::Node u;
+		host::Graph::Node v;
 
 		for (;;) {
 
-			bool validEdge = true;
+			bool validArc = true;
 
 			u = vertices[rand()%vertices.size()];
 			v = vertices[rand()%vertices.size()];
@@ -32,25 +32,25 @@ RandomWeightedGraphGenerator::fill(
 			if (u == v)
 				continue;
 
-			for (host::Graph::IncEdgeIt edge(graph, u); edge != lemon::INVALID; ++edge) {
+			for (host::OutArcIt arc(graph, u); arc != lemon::INVALID; ++arc) {
 
-				if (graph.u(edge) == v || graph.v(edge) == v) {
+				if (graph.source(arc) == v || graph.target(arc) == v) {
 
-					validEdge = false;
+					validArc = false;
 					break;
 				}
 			}
 
-			if (validEdge)
+			if (validArc)
 				break;
 		}
 
 		LOG_ALL(randomwggeneratorlog)
-				<< "adding edge " << graph.id(u) << " - " << graph.id(v) << std::endl;
+				<< "adding arc " << graph.id(u) << " - " << graph.id(v) << std::endl;
 
-		double weight = _minEdgeWeight + (static_cast<double>(rand())/RAND_MAX)*(_maxEdgeWeight - _minEdgeWeight);
+		double weight = _minArcWeight + (static_cast<double>(rand())/RAND_MAX)*(_maxArcWeight - _minArcWeight);
 
-		lemon::ListGraph::Edge e = graph.addEdge(u, v);
+		host::Graph::Arc e = graph.addArc(u, v);
 		weights[e] = weight;
 		types[e] = host::Link;
 	}

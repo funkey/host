@@ -7,9 +7,9 @@ logger::LogChannel lcmstsearchlog("lcmstsearchlog", "[LeafConstrainedMstSearch] 
 
 bool
 LeafConstrainedMstSearch::find(
-		const host::EdgeWeights&   weights,
+		const host::ArcWeights&   weights,
 		const host::NodeSelection& leaves,
-		host::EdgeSelection&       mst,
+		host::ArcSelection&       mst,
 		double&                    value,
 		unsigned int               maxIterations) {
 
@@ -44,11 +44,11 @@ LeafConstrainedMstSearch::find(
 
 	LOG_ALL(lcmstsearchlog)
 			<< "final weights are:" << std::endl;
-	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
+	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
 		LOG_ALL(lcmstsearchlog)
-				<< _graph.id(_graph.u(edge)) << " - "
-				<< _graph.id(_graph.v(edge)) << ": "
-				<< _currentWeights[edge] << std::endl;
+				<< _graph.id(_graph.source(arc)) << " - "
+				<< _graph.id(_graph.target(arc)) << ": "
+				<< _currentWeights[arc] << std::endl;
 
 	if (bundleMethod.getStatus() == ProximalBundleMethod<ValueGradientCallback>::ExactOptimiumFound)
 		return true;
@@ -69,16 +69,16 @@ LeafConstrainedMstSearch::setLambdas(const std::vector<double>& x) {
 }
 
 void
-LeafConstrainedMstSearch::updateCurrentWeights(const host::EdgeWeights& originalWeights) {
+LeafConstrainedMstSearch::updateCurrentWeights(const host::ArcWeights& originalWeights) {
 
-	for (host::Graph::EdgeIt edge(_graph); edge != lemon::INVALID; ++edge)
-		_currentWeights[edge] = originalWeights[edge] - _lambdas[_graph.u(edge)] - _lambdas[_graph.v(edge)];
+	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
+		_currentWeights[arc] = originalWeights[arc] - _lambdas[_graph.source(arc)] - _lambdas[_graph.target(arc)];
 }
 
 double
 LeafConstrainedMstSearch::getCurrentMst(
 		const host::NodeSelection& leaves,
-		host::EdgeSelection&       currentMst) {
+		host::ArcSelection&       currentMst) {
 
 	double mstValue = lemon::kruskal(_graph, _currentWeights, currentMst);
 
@@ -97,7 +97,7 @@ LeafConstrainedMstSearch::getCurrentMst(
 
 void
 LeafConstrainedMstSearch::getGradient(
-		const host::EdgeSelection& currentMst,
+		const host::ArcSelection& currentMst,
 		const host::NodeSelection& leaves,
 		std::vector<double>&       gradient) {
 
@@ -107,10 +107,10 @@ LeafConstrainedMstSearch::getGradient(
 		gradient[nodeNum] = 0.0;
 		unsigned int degree = 0;
 
-		// subtract one for every edge involving this edge
-		for (host::Graph::IncEdgeIt edge(_graph, node); edge != lemon::INVALID; ++edge) {
+		// subtract one for every arc involving this arc
+		for (host::Graph::OutArcIt arc(_graph, node); arc != lemon::INVALID; ++arc) {
 
-			if (currentMst[edge])
+			if (currentMst[arc])
 				degree++;
 		}
 		gradient[nodeNum] -= degree;

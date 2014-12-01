@@ -3,11 +3,11 @@
 
 #include <lemon/lgf_writer.h>
 
-std::istream& operator>>(std::istream& is, host::EdgeType& type) {
+std::istream& operator>>(std::istream& is, host::ArcType& type) {
 
 	unsigned int i;
 	is >> i;
-	type = static_cast<host::EdgeType>(i);
+	type = static_cast<host::ArcType>(i);
 
 	return is;
 }
@@ -19,19 +19,19 @@ public:
 	WeightedGraphWriter(const std::string& filename) :
 		_filename(filename) {}
 
-	void write(const host::Graph& graph, const host::EdgeWeights& weights) {
+	void write(const host::Graph& graph, const host::ArcWeights& weights) {
 
-		host::EdgeSelection dummy(graph);
+		host::ArcSelection dummy(graph);
 		write(graph, weights, dummy);
 	}
 
-	void write(const host::Graph& graph, const host::EdgeWeights& weights, const host::EdgeSelection& edgeSelection) {
+	void write(const host::Graph& graph, const host::ArcWeights& weights, const host::ArcSelection& arcSelection) {
 
 		std::ofstream os(_filename.c_str());
 
 		if (_filename.find(".lgf") != std::string::npos) {
 
-			lemon::graphWriter(graph, os).edgeMap("weights", weights).edgeMap("mst", edgeSelection).run();
+			lemon::digraphWriter(graph, os).arcMap("weights", weights).arcMap("mst", arcSelection).run();
 
 		} else { // write in GUESS format
 
@@ -40,14 +40,14 @@ public:
 			for (host::Graph::NodeIt node(graph); node != lemon::INVALID; ++node)
 				os << graph.id(node) << std::endl;
 
-			os << "edgedef>node1 VARCHAR,node2 VARCHAR,weight DOUBLE,mst BOOLEAN" << std::endl;
+			os << "arcdef>node1 VARCHAR,node2 VARCHAR,weight DOUBLE,mst BOOLEAN" << std::endl;
 
-			for (host::Graph::EdgeIt edge(graph); edge != lemon::INVALID; ++edge)
+			for (host::Graph::ArcIt arc(graph); arc != lemon::INVALID; ++arc)
 				os
-						<< graph.id(graph.u(edge)) << ","
-						<< graph.id(graph.v(edge)) << ","
-						<< weights[edge] << ","
-						<< edgeSelection[edge] << std::endl;
+						<< graph.id(graph.source(arc)) << ","
+						<< graph.id(graph.target(arc)) << ","
+						<< weights[arc] << ","
+						<< arcSelection[arc] << std::endl;
 		}
 	}
 

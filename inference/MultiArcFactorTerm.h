@@ -3,18 +3,18 @@
 
 #include <map>
 #include <vector>
-#include "HigherOrderEdgeTerm.h"
-#include "MultiEdgeFactors.h"
+#include "HigherOrderArcTerm.h"
+#include "MultiArcFactors.h"
 
 namespace host {
 
-class MultiEdgeFactorTerm : public HigherOrderEdgeTerm {
+class MultiArcFactorTerm : public HigherOrderArcTerm {
 
 public:
 
-	MultiEdgeFactorTerm(
+	MultiArcFactorTerm(
 			const host::Graph&      graph,
-			const MultiEdgeFactors& factors) :
+			const MultiArcFactors& factors) :
 		_graph(graph),
 		_factors(factors) {}
 
@@ -40,10 +40,10 @@ public:
 	void setLambdas(Lambdas::const_iterator begin, Lambdas::const_iterator end);
 
 	/**
-	 * Add the lambda contributions of this higher order term to the given edge 
+	 * Add the lambda contributions of this higher order term to the given arc 
 	 * weights.
 	 */
-	void addEdgeWeights(host::EdgeWeights& weights);
+	void addArcWeights(host::ArcWeights& weights);
 
 	/**
 	 * Get the constant contribution of this higher order term to the objective.
@@ -51,26 +51,26 @@ public:
 	double constant();
 
 	/**
-	 * For the given MST (represented as boolean flags on edges), compute the 
+	 * For the given MST (represented as boolean flags on arcs), compute the 
 	 * gradient for each lambda and store it in the range pointed to with the 
 	 * given iterator.
 	 */
 	void gradient(
-			const host::EdgeSelection& mst,
+			const host::ArcSelection& mst,
 			Lambdas::iterator          begin,
 			Lambdas::iterator          end);
 
 private:
 
-	std::string toString(const MultiEdgeFactors::Edges& edges);
+	std::string toString(const MultiArcFactors::Arcs& arcs);
 
 	const host::Graph& _graph;
 
-	MultiEdgeFactors                                           _factors;
-	std::map<MultiEdgeFactors::Edges,std::pair<double,double>> _lambdas;
+	MultiArcFactors                                           _factors;
+	std::map<MultiArcFactors::Arcs,std::pair<double,double>> _lambdas;
 
-	// indicators for joint edge selection (one per factor)
-	std::map<MultiEdgeFactors::Edges,bool> _z;
+	// indicators for joint arc selection (one per factor)
+	std::map<MultiArcFactors::Arcs,bool> _z;
 
 	// the constant contribution of this term
 	double _constant;

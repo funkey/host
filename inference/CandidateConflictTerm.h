@@ -2,23 +2,23 @@
 #define HOST_CANDIDATE_CONFLICT_TERM_H__
 
 #include <graphs/Graph.h>
-#include "HigherOrderEdgeTerm.h"
+#include "HigherOrderArcTerm.h"
 
 namespace host {
 
-class CandidateConflictTerm : public HigherOrderEdgeTerm {
+class CandidateConflictTerm : public HigherOrderArcTerm {
 
 public:
 
 	/**
 	 * Construct a candidate minimal spanning tree search for the given graph.
 	 */
-	CandidateConflictTerm(const Graph& graph, const EdgeTypes& edgeTypes);
+	CandidateConflictTerm(const Graph& graph, const ArcTypes& arcTypes);
 
 	/**
 	 * Get the number of lambda parameters of this higher order term.
 	 */
-	size_t numLambdas() { return _exclusiveEdges.size(); }
+	size_t numLambdas() { return _exclusiveArcs.size(); }
 
 	/**
 	 * Store the upper and lower bounds for each lambda in the the given ranges.
@@ -35,10 +35,10 @@ public:
 	void setLambdas(Lambdas::const_iterator begin, Lambdas::const_iterator end);
 
 	/**
-	 * Add the lambda contributions of this higher order term to the given edge 
+	 * Add the lambda contributions of this higher order term to the given arc 
 	 * weights.
 	 */
-	void addEdgeWeights(EdgeWeights& weights);
+	void addArcWeights(ArcWeights& weights);
 
 	/**
 	 * Get the constant contribution of this higher order term to the objective.
@@ -46,27 +46,27 @@ public:
 	double constant();
 
 	/**
-	 * For the given MST (represented as boolean flags on edges), compute the 
+	 * For the given MST (represented as boolean flags on arcs), compute the 
 	 * gradient for each lambda and store it in the range pointed to with the 
 	 * given iterator.
 	 */
 	void gradient(
-			const EdgeSelection& mst,
+			const ArcSelection& mst,
 			Lambdas::iterator          begin,
 			Lambdas::iterator          end);
 
 private:
 
-	typedef std::vector<Edge>            ExclusiveEdges;
-	typedef std::tuple<ExclusiveEdges, double> ExclusiveEdgesLambda;
+	typedef std::vector<Arc>            ExclusiveArcs;
+	typedef std::tuple<ExclusiveArcs, double> ExclusiveArcsLambda;
 
-	void findExclusiveEdges(const EdgeTypes& edgeTypes);
+	void findExclusiveArcs(const ArcTypes& arcTypes);
 
-	std::string toString(const ExclusiveEdges& edges);
+	std::string toString(const ExclusiveArcs& arcs);
 
-	// list of exclusive edges and their lambda values, derived from conflicting 
+	// list of exclusive arcs and their lambda values, derived from conflicting 
 	// candidates
-	std::vector<ExclusiveEdgesLambda> _exclusiveEdges;
+	std::vector<ExclusiveArcsLambda> _exclusiveArcs;
 
 	const Graph& _graph;
 };

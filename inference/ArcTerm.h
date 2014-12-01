@@ -3,14 +3,14 @@
 
 #include <graphs/Graph.h>
 
-class EdgeTerm {
+class ArcTerm {
 
 public:
 
 	/**
-	 * Add the weights contributed by this edge term to the given edge weights.
+	 * Add the weights contributed by this arc term to the given arc weights.
 	 */
-	virtual void addEdgeWeights(host::EdgeWeights& weights) = 0;
+	virtual void addArcWeights(host::ArcWeights& weights) = 0;
 };
 
 #endif // HOST_INFERENCE_EDGE_TERM_H__

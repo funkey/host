@@ -5,21 +5,25 @@
 
 namespace host {
 
-enum EdgeType {
+enum ArcType {
 
 	Link     = 0,
 	Conflict = 1
 };
 
-typedef lemon::ListGraph            Graph;
-typedef Graph::Node                 Node;
-typedef Graph::NodeMap<double>      NodeWeights;
-typedef Graph::NodeMap<bool>        NodeSelection;
-typedef Graph::Edge                 Edge;
-typedef Graph::EdgeMap<double>      EdgeWeights;
-typedef Graph::EdgeMap<std::string> EdgeLabels;
-typedef Graph::EdgeMap<EdgeType>    EdgeTypes;
-typedef Graph::EdgeMap<bool>        EdgeSelection;
+typedef lemon::ListDigraph         Graph;
+typedef Graph::Node                Node;
+typedef Graph::NodeIt              NodeIt;
+typedef Graph::NodeMap<double>     NodeWeights;
+typedef Graph::NodeMap<bool>       NodeSelection;
+typedef Graph::Arc                 Arc;
+typedef Graph::ArcIt               ArcIt;
+typedef Graph::OutArcIt            OutArcIt;
+typedef Graph::InArcIt             InArcIt;
+typedef Graph::ArcMap<double>      ArcWeights;
+typedef Graph::ArcMap<std::string> ArcLabels;
+typedef Graph::ArcMap<ArcType>     ArcTypes;
+typedef Graph::ArcMap<bool>        ArcSelection;
 
 } // namespace host
 

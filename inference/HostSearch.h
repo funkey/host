@@ -2,8 +2,8 @@
 #define HOST_INFERENCE_HOST_SEARCH_H__
 
 #include <vector>
-#include "EdgeTerm.h"
-#include "HigherOrderEdgeTerm.h"
+#include "ArcTerm.h"
+#include "HigherOrderArcTerm.h"
 
 class HostSearch {
 
@@ -14,19 +14,19 @@ public:
 		_graph(graph) {}
 
 	/**
-	 * Add an edge term to the objective of this search.
+	 * Add an arc term to the objective of this search.
 	 */
-	void addTerm(EdgeTerm* term);
+	void addTerm(ArcTerm* term);
 
 	/**
 	 * Find a minimal spanning tree on a consistent subset of the provided 
 	 * candidate nodes.
 	 *
 	 * @param weights
-	 *              Edge weights for the graph associated to this search.
+	 *              Arc weights for the graph associated to this search.
 	 *
 	 * @param mst
-	 *              The edges that are part of the minimal spanning tree.
+	 *              The arcs that are part of the minimal spanning tree.
 	 *
 	 * @param value
 	 *              The length of the minimal spanning tree.
@@ -39,7 +39,7 @@ public:
 	 *              constraints could be found.
 	 */
 	bool find(
-			host::EdgeSelection&     mst,
+			host::ArcSelection&     mst,
 			double&                  value,
 			unsigned int             maxIterations = 1000);
 
@@ -51,7 +51,7 @@ private:
 
 		ValueGradientCallback(
 				HostSearch&              hostSearch,
-				host::EdgeSelection&     mst) :
+				host::ArcSelection&     mst) :
 			_hostSearch(hostSearch),
 			_mst(mst) {}
 
@@ -60,30 +60,30 @@ private:
 	private:
 
 		HostSearch&          _hostSearch;
-		host::EdgeSelection& _mst;
+		host::ArcSelection& _mst;
 	};
 
 	size_t numLambdas();
 
-	// set the lambdas in all higher-order edge terms
+	// set the lambdas in all higher-order arc terms
 	void setLambdas(const Lambdas& x);
 
-	// assemble the edge weights from all edge terms
+	// assemble the arc weights from all arc terms
 	void updateWeights();
 
 	// find the minimal spanning tree on the current weights
-	double mst(host::EdgeSelection& currentMst);
+	double mst(host::ArcSelection& currentMst);
 
 	// get the gradient for the given mst
 	void gradient(
-			const host::EdgeSelection& mst,
+			const host::ArcSelection& mst,
 			Lambdas&                   gradient);
 
-	std::vector<EdgeTerm*>            _edgeTerms;
-	std::vector<HigherOrderEdgeTerm*> _higherOrderEdgeTerms;
+	std::vector<ArcTerm*>            _arcTerms;
+	std::vector<HigherOrderArcTerm*> _higherOrderArcTerms;
 
 	// the current weights under consideration of all terms
-	host::EdgeWeights _currentWeights;
+	host::ArcWeights _currentWeights;
 
 	const host::Graph& _graph;
 };

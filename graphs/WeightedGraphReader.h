@@ -13,13 +13,13 @@ public:
 
 	void fill(
 			host::Graph& graph,
-			host::EdgeWeights& weights,
-			host::EdgeLabels& labels,
-			host::EdgeTypes& types) {
+			host::ArcWeights& weights,
+			host::ArcLabels& labels,
+			host::ArcTypes& types) {
 
 		std::ifstream is(_filename.c_str());
 
-		lemon::graphReader(graph, is).edgeMap("weights", weights).edgeMap("labels", labels).edgeMap("types", types).run();
+		lemon::digraphReader(graph, is).arcMap("weights", weights).arcMap("labels", labels).arcMap("types", types).run();
 	}
 
 private:
