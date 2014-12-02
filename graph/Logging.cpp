@@ -44,7 +44,7 @@ operator<<(std::ostream& os, const host::Edge& edge) {
 
 	const host::Graph& graph = *host::LoggingState::getLoggingGraph();
 
-	os << "(" << graph.id(graph.source(edge)) << ", " << graph.id(graph.target(edge)) << ")";
+	os << "[" << graph.id(graph.source(edge)) << ", " << graph.id(graph.target(edge)) << "]";
 	return os;
 }
 

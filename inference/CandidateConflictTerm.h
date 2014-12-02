@@ -86,11 +86,6 @@ private:
 	// find conflict nodes and add an ConflictArcsLambda for each incoming edge
 	void findConflictArcs(const ArcTypes& arcTypes);
 
-	inline std::string toString(const Arc& arc);
-	inline std::string toString(const Arcs& arcs);
-	inline std::string toString(const Edge& edge);
-	inline std::string toString(const Edges& edges);
-
 	// list of conflict nodes and their lambda values
 	std::vector<ExclusiveEdgesLambda> _exclusiveEdges;
 	std::vector<ConflictArcsLambda>   _conflictArcs;
