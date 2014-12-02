@@ -11,7 +11,48 @@ enum ArcType {
 	Conflict = 1
 };
 
-class Graph : public lemon::ListDigraph {
+typedef lemon::ListDigraph GraphBase;
+
+typedef GraphBase::Node                Node;
+typedef GraphBase::NodeIt              NodeIt;
+typedef GraphBase::NodeMap<double>     NodeWeights;
+typedef GraphBase::NodeMap<bool>       NodeSelection;
+typedef GraphBase::Arc                 Arc;
+typedef GraphBase::ArcIt               ArcIt;
+typedef GraphBase::OutArcIt            OutArcIt;
+typedef GraphBase::InArcIt             InArcIt;
+typedef GraphBase::ArcMap<double>      ArcWeights;
+typedef GraphBase::ArcMap<std::string> ArcLabels;
+typedef GraphBase::ArcMap<ArcType>     ArcTypes;
+
+/**
+ * An edge consists of all arcs between two nodes (i.e., one or two).
+ */
+class Edge {
+
+public:
+
+	typedef std::vector<Arc>     Arcs;
+	typedef Arcs::iterator       iterator;
+	typedef Arcs::const_iterator const_iterator;
+
+	void addArc(const Arc& arc) { _arcs.push_back(arc); std::sort(_arcs.begin(), _arcs.end()); }
+
+	iterator begin() { return _arcs.begin(); }
+	const_iterator begin() const { return _arcs.begin(); }
+	iterator end() { return _arcs.end(); }
+	const_iterator end() const { return _arcs.end(); }
+
+	bool operator==(const Edge& other) const { return _arcs == other._arcs; }
+
+	bool contains(const Arc& arc) { return std::find(_arcs.begin(), _arcs.end(), arc) != _arcs.end(); }
+
+private:
+
+	Arcs _arcs;
+};
+
+class Graph : public GraphBase {
 
 public:
 
@@ -42,6 +83,18 @@ public:
 	 */
 	Node getRoot() const { return _root; }
 
+	/**
+	 * The "source" of an undirected edge, i.e., the lower of the two nodes.
+	 */
+	Node source(const Edge& edge) const { return source(*edge.begin()); }
+	using GraphBase::source;
+
+	/**
+	 * The "target" of an undirected edge, i.e., the bigger of the two nodes.
+	 */
+	Node target(const Edge& edge) const { return target(*edge.begin()); }
+	using GraphBase::target;
+
 private:
 
 	bool _isUndirected;
@@ -49,18 +102,32 @@ private:
 	Node _root;
 };
 
-typedef Graph::Node                Node;
-typedef Graph::NodeIt              NodeIt;
-typedef Graph::NodeMap<double>     NodeWeights;
-typedef Graph::NodeMap<bool>       NodeSelection;
-typedef Graph::Arc                 Arc;
-typedef Graph::ArcIt               ArcIt;
-typedef Graph::OutArcIt            OutArcIt;
-typedef Graph::InArcIt             InArcIt;
-typedef Graph::ArcMap<double>      ArcWeights;
-typedef Graph::ArcMap<std::string> ArcLabels;
-typedef Graph::ArcMap<ArcType>     ArcTypes;
-typedef Graph::ArcMap<bool>        ArcSelection;
+
+/**
+ * Selection of arcs, represented as bool attributes.
+ */
+class ArcSelection : public Graph::ArcMap<bool> {
+
+public:
+
+	ArcSelection(const Graph& graph) :
+		Graph::ArcMap<bool>(graph) {}
+
+	using Graph::ArcMap<bool>::operator[];
+
+	/**
+	 * Check whether any of the arcs of the given edge is contained in the 
+	 * selection.
+	 */
+	bool operator[](const Edge& edge) const {
+
+		for (const Arc& arc : edge)
+			if ((*this)[arc])
+				return true;
+
+		return false;
+	}
+};
 
 } // namespace host
 

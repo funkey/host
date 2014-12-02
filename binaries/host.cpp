@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
 	}
 
 	// the minimal spanning tree
-	host::Graph::ArcMap<bool> mst(graph);
+	host::ArcSelection mst(graph);
 
 	// search the minimal spanning tree under consideration of conflicting 
 	// candidates

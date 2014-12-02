@@ -20,7 +20,7 @@ MultiArcFactorReader::fill(
 	while (std::getline(in, line)) {
 
 		double value;
-		MultiArcFactors::Arcs arcs;
+		MultiArcFactors::Edges arcs;
 
 		std::stringstream ss(line);
 

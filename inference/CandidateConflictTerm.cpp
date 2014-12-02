@@ -110,8 +110,8 @@ CandidateConflictTerm::constant() {
 void
 CandidateConflictTerm::gradient(
 		const ArcSelection& mst,
-		Lambdas::iterator          begin,
-		Lambdas::iterator          end) {
+		Lambdas::iterator   begin,
+		Lambdas::iterator   end) {
 
 	Lambdas::iterator i = begin;
 
@@ -121,8 +121,7 @@ CandidateConflictTerm::gradient(
 
 		int sum = 0;
 		for (const auto& edge : exclusive.edges)
-			for (const auto& arc : edge)
-				sum += mst[arc];
+			sum += mst[edge];
 
 		*i = sum - (static_cast<int>(exclusive.edges.size()) - 1);
 
