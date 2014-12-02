@@ -19,10 +19,55 @@ public:
 
 		std::ifstream is(_filename.c_str());
 
-		lemon::digraphReader(graph, is).arcMap("weights", weights).arcMap("labels", labels).arcMap("types", types).run();
+		bool isUndirected;
+
+		lemon::digraphReader(graph, is).
+				arcMap("weights", weights).
+				arcMap("labels", labels).
+				arcMap("types", types).
+				attribute("undirected", isUndirected).
+				run();
+
+		graph.setUndirected(isUndirected);
+
+		if (isUndirected) {
+
+			// add arcs in opposite direction for each link arc
+			for (host::ArcIt arc(graph); arc != lemon::INVALID; ++arc) {
+
+				if (!types[arc] == host::Link)
+					continue;
+
+				addOppositeArc(graph, arc, weights, labels, types);
+			}
+
+		}
+
+		// add arcs in opposite direction for each conflict arc
+		for (host::ArcIt arc(graph); arc != lemon::INVALID; ++arc) {
+
+			if (!types[arc] == host::Conflict)
+				continue;
+
+			addOppositeArc(graph, arc, weights, labels, types);
+		}
 	}
 
 private:
+
+	void addOppositeArc(
+			host::Graph& graph,
+			const host::Arc& arc,
+			host::ArcWeights& weights,
+			host::ArcLabels& labels,
+			host::ArcTypes& types) {
+
+		host::Arc opposite = graph.addArc(graph.target(arc), graph.source(arc));
+
+		weights[opposite] = weights[arc];
+		labels[opposite]  = labels[arc] + std::string("_opp");
+		types[opposite]   = types[arc];
+	}
 
 	std::string _filename;
 };

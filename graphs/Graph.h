@@ -11,7 +11,32 @@ enum ArcType {
 	Conflict = 1
 };
 
-typedef lemon::ListDigraph         Graph;
+class Graph : public lemon::ListDigraph {
+
+public:
+
+	Graph() :
+		_isUndirected(false) {}
+
+	/**
+	 * Returns true if this graph is undirected. Undirected graphs have 
+	 * symmetric link arcs, i.e., whenever node A links to node B with cost c, 
+	 * node B does also link to node A with the same costs c.
+	 */
+	bool isUndirected() { return _isUndirected; }
+
+	/**
+	 * Mark this graph as undirected. This does not change the graph and does 
+	 * not test whether the arcs are really symmetric. Set this if you created 
+	 * the graph and know whether it is directed or not.
+	 */
+	void setUndirected(bool isUndirected) { _isUndirected = isUndirected; }
+
+private:
+
+	bool _isUndirected;
+};
+
 typedef Graph::Node                Node;
 typedef Graph::NodeIt              NodeIt;
 typedef Graph::NodeMap<double>     NodeWeights;
