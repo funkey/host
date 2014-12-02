@@ -3,7 +3,7 @@
 
 #include <map>
 #include <inference/HigherOrderArcTerm.h>
-#include <graphs/Logging.h>
+#include <graph/Logging.h>
 #include <util/Logger.h>
 #include <util/exceptions.h>
 #include "MultiFactorsImpl.h"

@@ -1,26 +1,26 @@
 #include <fstream>
-#include "MultiArcFactorReader.h"
+#include "MultiEdgeFactorReader.h"
 
 namespace host {
 
 void
-MultiArcFactorReader::fill(
+MultiEdgeFactorReader::fill(
 		const Graph&      graph,
-		const ArcLabels& labels,
-		MultiArcFactors& factors) {
+		const ArcLabels&  labels,
+		MultiEdgeFactors& factors) {
 
 	std::ifstream in(_filename);
 
 	// create a reverse look-up from labels to arcs
-	std::map<std::string, Arc> labelArcMap;
+	std::map<std::string, Arc> labelEdgeMap;
 	for (host::ArcIt arc(graph); arc != lemon::INVALID; ++arc)
-		labelArcMap[labels[arc]] = arc;
+		labelEdgeMap[labels[arc]] = arc;
 
 	std::string line;
 	while (std::getline(in, line)) {
 
 		double value;
-		MultiArcFactors::Edges arcs;
+		MultiEdgeFactors::Edges edges;
 
 		std::stringstream ss(line);
 
@@ -29,10 +29,10 @@ MultiArcFactorReader::fill(
 
 			std::string label;
 			ss >> label;
-			arcs.push_back(labelArcMap[label]);
+			edges.push_back(graph.edgeFromArc(labelEdgeMap[label]));
 		}
 
-		factors[arcs] = value;
+		factors[edges] = value;
 	}
 }
 

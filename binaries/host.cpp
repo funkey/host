@@ -3,15 +3,15 @@
 #include <util/Logger.h>
 #include <util/ProgramOptions.h>
 
-#include <graphs/Graph.h>
-#include <graphs/RandomWeightedGraphGenerator.h>
+#include <graph/Graph.h>
+#include <graph/RandomWeightedGraphGenerator.h>
 #include <io/WeightedGraphReader.h>
 #include <io/WeightedGraphWriter.h>
 #include <inference/HostSearch.h>
 #include <inference/InitialWeightTerm.h>
 #include <inference/CandidateConflictTerm.h>
-#include <inference/MultiArcFactorTerm.h>
-#include <io/MultiArcFactorReader.h>
+#include <inference/MultiEdgeFactorTerm.h>
+#include <io/MultiEdgeFactorReader.h>
 
 util::ProgramOption optionGraphFile(
 		util::_long_name        = "graph",
@@ -20,8 +20,13 @@ util::ProgramOption optionGraphFile(
 
 util::ProgramOption optionMultiArcFactorFile(
 		util::_long_name        = "multiArcFactors",
-		util::_short_name       = "m",
+		util::_short_name       = "ma",
 		util::_description_text = "Read the multi-arc factors from the given file.");
+
+util::ProgramOption optionMultiEdgeFactorFile(
+		util::_long_name        = "multiEdgeFactors",
+		util::_short_name       = "me",
+		util::_description_text = "Read the multi-edge factors from the given file.");
 
 util::ProgramOption optionRandomGraphNodes(
 		util::_long_name        = "randomGraphNodes",
@@ -57,11 +62,11 @@ int main(int argc, char** argv) {
 	util::ProgramOptions::init(argc, argv);
 	logger::LogManager::init();
 
-	host::Graph           graph;
-	host::ArcWeights      arcWeights(graph);
-	host::ArcLabels       arcLabels(graph);
-	host::ArcTypes        arcTypes(graph);
-	host::MultiArcFactors multiArcFactors;
+	host::Graph            graph;
+	host::ArcWeights       arcWeights(graph);
+	host::ArcLabels        arcLabels(graph);
+	host::ArcTypes         arcTypes(graph);
+	host::MultiEdgeFactors multiEdgeFactors;
 
 	if (optionGraphFile) {
 
@@ -84,10 +89,10 @@ int main(int argc, char** argv) {
 				<< " nodes" << std::endl;
 	}
 
-	if (optionMultiArcFactorFile) {
+	if (optionMultiEdgeFactorFile) {
 
-		host::MultiArcFactorReader factorReader(optionMultiArcFactorFile.as<std::string>());
-		factorReader.fill(graph, arcLabels, multiArcFactors);
+		host::MultiEdgeFactorReader factorReader(optionMultiEdgeFactorFile.as<std::string>());
+		factorReader.fill(graph, arcLabels, multiEdgeFactors);
 	}
 
 	if (lemon::countArcs(graph) <= 100) {
@@ -108,7 +113,7 @@ int main(int argc, char** argv) {
 
 	host::InitialWeightTerm     weightTerm(graph, arcWeights);
 	host::CandidateConflictTerm cctTerm(graph, arcTypes);
-	host::MultiArcFactorTerm    mefTerm(graph, multiArcFactors);
+	host::MultiEdgeFactorTerm   mefTerm(graph, multiEdgeFactors);
 
 	hostSearch.addTerm(&weightTerm);
 	hostSearch.addTerm(&cctTerm);

@@ -1,7 +1,7 @@
 #ifndef HOST_CANDIDATE_CONFLICT_TERM_H__
 #define HOST_CANDIDATE_CONFLICT_TERM_H__
 
-#include <graphs/Graph.h>
+#include <graph/Graph.h>
 #include "HigherOrderArcTerm.h"
 
 namespace host {

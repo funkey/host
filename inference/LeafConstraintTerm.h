@@ -1,7 +1,7 @@
 #ifndef HOST_INFERENCE_LEAF_CONSTRAINED_MST_SEARCH_H__
 #define HOST_INFERENCE_LEAF_CONSTRAINED_MST_SEARCH_H__
 
-#include <graphs/Graph.h>
+#include <graph/Graph.h>
 
 class LeafConstrainedMstSearch {
 

@@ -3,7 +3,7 @@
 
 #include <map>
 #include <vector>
-#include <graphs/Graph.h>
+#include <graph/Graph.h>
 
 namespace host {
 namespace detail {
