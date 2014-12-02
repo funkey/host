@@ -5,8 +5,8 @@
 
 #include <graphs/Graph.h>
 #include <graphs/RandomWeightedGraphGenerator.h>
-#include <graphs/WeightedGraphReader.h>
-#include <graphs/WeightedGraphWriter.h>
+#include <io/WeightedGraphReader.h>
+#include <io/WeightedGraphWriter.h>
 #include <inference/HostSearch.h>
 #include <inference/InitialWeightTerm.h>
 #include <inference/CandidateConflictTerm.h>
