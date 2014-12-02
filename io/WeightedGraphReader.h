@@ -19,16 +19,19 @@ public:
 
 		std::ifstream is(_filename.c_str());
 
-		bool isUndirected;
+		bool isUndirected = true;
+		int  rootId = 0;
 
 		lemon::digraphReader(graph, is).
 				arcMap("weights", weights).
 				arcMap("labels", labels).
 				arcMap("types", types).
 				attribute("undirected", isUndirected).
+				attribute("root", rootId).
 				run();
 
 		graph.setUndirected(isUndirected);
+		graph.setRoot(graph.nodeFromId(rootId));
 
 		if (isUndirected) {
 

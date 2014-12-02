@@ -113,7 +113,18 @@ HostSearch::updateWeights() {
 double
 HostSearch::mst(host::ArcSelection& currentMst) {
 
-	double mstValue = lemon::minCostArborescence(_graph, _currentWeights, host::Graph::NodeIt(_graph), currentMst);
+	double mstValue = lemon::minCostArborescence(_graph, _currentWeights, _graph.getRoot(), currentMst);
+
+	LOG_ALL(hostsearchlog)
+			<< "minimal spanning tree with root at "
+			<< _graph.id(_graph.getRoot())
+			<< " is:" << std::endl;
+	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
+		LOG_ALL(hostsearchlog)
+				<< _graph.id(_graph.source(arc)) << " - "
+				<< _graph.id(_graph.target(arc)) << ": "
+				<< currentMst[arc] << std::endl;
+	LOG_ALL(hostsearchlog) << std::endl;
 
 	// to the mst value obtained above, we have to add a constant for each 
 	// higher order term

@@ -32,9 +32,21 @@ public:
 	 */
 	void setUndirected(bool isUndirected) { _isUndirected = isUndirected; }
 
+	/**
+	 * Set the root node for the branching search in directed graphs.
+	 */
+	void setRoot(Node root) { _root = root; }
+
+	/**
+	 * Get the root node.
+	 */
+	Node getRoot() const { return _root; }
+
 private:
 
 	bool _isUndirected;
+
+	Node _root;
 };
 
 typedef Graph::Node                Node;
