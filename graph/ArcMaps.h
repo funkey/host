@@ -33,7 +33,7 @@ public:
 		WeightsProxy& operator-=(const T& value) {
 
 			for (const auto& arc : *_edge)
-				(*_weights)[arc] += value;
+				(*_weights)[arc] -= value;
 
 			return *this;
 		}
