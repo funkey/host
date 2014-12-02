@@ -3,6 +3,7 @@
 
 #include <map>
 #include <inference/HigherOrderArcTerm.h>
+#include <inference/Configuration.h>
 #include <graph/Logging.h>
 #include <util/Logger.h>
 #include <util/exceptions.h>
@@ -72,7 +73,7 @@ private:
 
 	const host::Graph& _graph;
 
-	MultiFactorsImpl<EdgeType>                                           _factors;
+	MultiFactorsImpl<EdgeType>                   _factors;
 	std::map<EdgesType,std::pair<double,double>> _lambdas;
 
 	// indicators for joint arc selection (one per factor)
@@ -197,7 +198,8 @@ MultiFactorTermImpl<EdgeType>::gradient(
 
 	for (const auto& factor : _factors) {
 
-		const EdgesType& edges = factor.first;
+		const EdgesType& edges                   = factor.first;
+		const std::pair<double, double>& lambdas = _lambdas[edges];
 
 		int sumArcs = 0;
 		for (const auto& edge : edges)
@@ -205,6 +207,11 @@ MultiFactorTermImpl<EdgeType>::gradient(
 
 		double gradient1 = 2*_z[edges] - sumArcs;
 		double gradient2 = sumArcs - _z[edges] - 1;
+
+		if (gradient1 < 0 && lambdas.first < Configuration::LambdaEpsilon)
+			gradient1 = 0;
+		if (gradient2 < 0 && lambdas.second < Configuration::LambdaEpsilon)
+			gradient2 = 0;
 
 		// store the gradients in the same order we retrieved the lambdas
 		*i = gradient1; i++;
