@@ -1,4 +1,4 @@
-#include <lemon/kruskal.h>
+#include <lemon/min_cost_arborescence.h>
 #include <util/Logger.h>
 #include "ProximalBundleMethod.h"
 #include "HostSearch.h"
@@ -113,7 +113,7 @@ HostSearch::updateWeights() {
 double
 HostSearch::mst(host::ArcSelection& currentMst) {
 
-	double mstValue = lemon::kruskal(_graph, _currentWeights, currentMst);
+	double mstValue = lemon::minCostArborescence(_graph, _currentWeights, host::Graph::NodeIt(_graph), currentMst);
 
 	// to the mst value obtained above, we have to add a constant for each 
 	// higher order term
