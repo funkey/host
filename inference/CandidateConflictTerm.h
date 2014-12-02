@@ -11,14 +11,14 @@ class CandidateConflictTerm : public HigherOrderArcTerm {
 public:
 
 	/**
-	 * Construct a candidate minimal spanning tree search for the given graph.
+	 * Construct a candidate conflict term for the given graph.
 	 */
 	CandidateConflictTerm(const Graph& graph, const ArcTypes& arcTypes);
 
 	/**
 	 * Get the number of lambda parameters of this higher order term.
 	 */
-	size_t numLambdas() { return _exclusiveArcs.size(); }
+	size_t numLambdas() { return _exclusiveArcs.size() + _conflictArcs.size(); }
 
 	/**
 	 * Store the upper and lower bounds for each lambda in the the given ranges.
@@ -57,16 +57,38 @@ public:
 
 private:
 
-	typedef std::vector<Arc>            ExclusiveArcs;
-	typedef std::tuple<ExclusiveArcs, double> ExclusiveArcsLambda;
+	typedef std::vector<Arc> ExclusiveArcs;
 
+	// list of exclusive arcs (not all of them can be selected at the same time) 
+	// and the lambda value assoticated with them
+	struct ExclusiveArcsLambda {
+
+		ExclusiveArcs arcs;
+		double        lambda;
+	};
+
+	// arc and a list of conflict arcs (no conflict arc can be selected, if arc 
+	// is selected) and the lambda value associated with them
+	struct ArcLambda {
+
+		Arc              arc;
+		std::vector<Arc> conflictArcs;
+		double           lambda;
+	};
+
+	// find conflict nodes and add an ArcLambda for each incoming edge
+	void findArcLambdas(const ArcTypes& arcTypes);
+
+	// find pairs of mutual exclusive arcs
 	void findExclusiveArcs(const ArcTypes& arcTypes);
 
-	std::string toString(const ExclusiveArcs& arcs);
+	inline std::string toString(const Arc& arc);
 
-	// list of exclusive arcs and their lambda values, derived from conflicting 
-	// candidates
+	inline std::string toString(const ExclusiveArcs& arcs);
+
+	// list of conflict nodes and their lambda values
 	std::vector<ExclusiveArcsLambda> _exclusiveArcs;
+	std::vector<ArcLambda>           _conflictArcs;
 
 	const Graph& _graph;
 };
