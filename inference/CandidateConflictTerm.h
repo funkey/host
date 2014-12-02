@@ -18,7 +18,7 @@ public:
 	/**
 	 * Get the number of lambda parameters of this higher order term.
 	 */
-	size_t numLambdas() { return _exclusiveArcs.size() + _conflictArcs.size(); }
+	size_t numLambdas() { return _exclusiveEdges.size() + _conflictArcs.size(); }
 
 	/**
 	 * Store the upper and lower bounds for each lambda in the the given ranges.
@@ -57,38 +57,67 @@ public:
 
 private:
 
-	typedef std::vector<Arc> ExclusiveArcs;
+	typedef std::vector<Arc>  Arcs;
+
+	// an edge consists of all arcs between two nodes (i.e., one or two)
+	class Edge {
+
+	public:
+
+		typedef Arcs::iterator       iterator;
+		typedef Arcs::const_iterator const_iterator;
+
+		void addArc(const Arc& arc) { _arcs.push_back(arc); std::sort(_arcs.begin(), _arcs.end()); }
+
+		iterator begin() { return _arcs.begin(); }
+		const_iterator begin() const { return _arcs.begin(); }
+		iterator end() { return _arcs.end(); }
+		const_iterator end() const { return _arcs.end(); }
+
+		bool operator==(const Edge& other) const { return _arcs == other._arcs; }
+
+		bool contains(const Arc& arc) { return std::find(_arcs.begin(), _arcs.end(), arc) != _arcs.end(); }
+
+	private:
+
+		Arcs _arcs;
+	};
+	typedef std::vector<Edge> Edges;
 
 	// list of exclusive arcs (not all of them can be selected at the same time) 
 	// and the lambda value assoticated with them
-	struct ExclusiveArcsLambda {
+	struct ExclusiveEdgesLambda {
 
-		ExclusiveArcs arcs;
-		double        lambda;
+		Edges  edges;
+		double lambda;
 	};
 
 	// arc and a list of conflict arcs (no conflict arc can be selected, if arc 
 	// is selected) and the lambda value associated with them
-	struct ArcLambda {
+	struct ConflictArcsLambda {
 
-		Arc              arc;
-		std::vector<Arc> conflictArcs;
-		double           lambda;
+		Arc    arc;
+		Arcs   conflictArcs;
+		double lambda;
 	};
 
-	// find conflict nodes and add an ArcLambda for each incoming edge
-	void findArcLambdas(const ArcTypes& arcTypes);
-
 	// find pairs of mutual exclusive arcs
-	void findExclusiveArcs(const ArcTypes& arcTypes);
+	void findExclusiveEdges(const ArcTypes& arcTypes);
+
+	// find all link edges of a node
+	Edges findLinkEdges(const Node& node, const ArcTypes& arcTypes);
+
+	// find conflict nodes and add an ConflictArcsLambda for each incoming edge
+	void findConflictArcs(const ArcTypes& arcTypes);
 
 	inline std::string toString(const Arc& arc);
-
-	inline std::string toString(const ExclusiveArcs& arcs);
+	inline std::string toString(const Arcs& arcs);
+	inline std::string toString(const Edge& edge);
+	inline std::string toString(const Edges& edges);
 
 	// list of conflict nodes and their lambda values
-	std::vector<ExclusiveArcsLambda> _exclusiveArcs;
-	std::vector<ArcLambda>           _conflictArcs;
+	std::vector<ExclusiveEdgesLambda> _exclusiveEdges;
+	std::vector<ConflictArcsLambda>   _conflictArcs;
 
 	const Graph& _graph;
 };
