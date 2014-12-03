@@ -8,11 +8,11 @@ namespace host {
 /**
  * An arc term contributing an initial set of arc weights.
  */
-class InitialWeightTerm : public ArcTerm {
+class ExplicitWeightTerm : public ArcTerm {
 
 public:
 
-	InitialWeightTerm(
+	ExplicitWeightTerm(
 			const Graph& graph,
 			const ArcWeights& weights) :
 		_graph(graph),

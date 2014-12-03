@@ -7,11 +7,11 @@
 #include <graph/RandomWeightedGraphGenerator.h>
 #include <io/WeightedGraphReader.h>
 #include <io/WeightedGraphWriter.h>
+#include <io/MultiEdgeFactorReader.h>
 #include <inference/HostSearch.h>
-#include <inference/InitialWeightTerm.h>
+#include <inference/ExplicitWeightTerm.h>
 #include <inference/CandidateConflictTerm.h>
 #include <inference/MultiEdgeFactorTerm.h>
-#include <io/MultiEdgeFactorReader.h>
 
 util::ProgramOption optionGraphFile(
 		util::_long_name        = "graph",
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
 
 	if (optionGraphFile) {
 
-		WeightedGraphReader graphReader(optionGraphFile.as<std::string>());
+		host::WeightedGraphReader graphReader(optionGraphFile.as<std::string>());
 		graphReader.fill(graph, arcWeights, arcLabels, arcTypes);
 
 	} else {
@@ -109,9 +109,9 @@ int main(int argc, char** argv) {
 
 	// search the minimal spanning tree under consideration of conflicting 
 	// candidates
-	HostSearch hostSearch(graph);
+	host::HostSearch hostSearch(graph);
 
-	host::InitialWeightTerm     weightTerm(graph, arcWeights);
+	host::ExplicitWeightTerm    weightTerm(graph, arcWeights);
 	host::CandidateConflictTerm cctTerm(graph, arcTypes);
 	host::MultiEdgeFactorTerm   mefTerm(graph, multiEdgeFactors);
 
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
 
 	if (optionWriteResult) {
 
-		WeightedGraphWriter graphWriter(optionWriteResult.as<std::string>());
+		host::WeightedGraphWriter graphWriter(optionWriteResult.as<std::string>());
 		graphWriter.write(graph, arcWeights, mst);
 
 		std::cout << "wrote result to " << optionWriteResult.as<std::string>() << std::endl;

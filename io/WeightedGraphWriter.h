@@ -3,14 +3,7 @@
 
 #include <lemon/lgf_writer.h>
 
-std::istream& operator>>(std::istream& is, host::ArcType& type) {
-
-	unsigned int i;
-	is >> i;
-	type = static_cast<host::ArcType>(i);
-
-	return is;
-}
+namespace host {
 
 class WeightedGraphWriter {
 
@@ -31,7 +24,7 @@ public:
 
 		if (_filename.find(".lgf") != std::string::npos) {
 
-			lemon::digraphWriter(graph, os).arcMap("weights", weights).arcMap("mst", arcSelection).run();
+			lemon::digraphWriter(graph, os).arcMap("weight", weights).arcMap("mst", arcSelection).run();
 
 		} else { // write in GUESS format
 
@@ -55,6 +48,8 @@ private:
 
 	std::string _filename;
 };
+
+} // namespace host
 
 #endif // HOST_GRAPHS_WEIGHTED_GRAPH_WRITER_H__
 

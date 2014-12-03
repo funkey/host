@@ -4,6 +4,10 @@
 #include <lemon/lgf_reader.h>
 #include "WeightedGraphGenerator.h"
 
+std::istream& operator>>(std::istream& is, host::ArcType& type);
+
+namespace host {
+
 class WeightedGraphReader : public WeightedGraphGenerator {
 
 public:
@@ -23,9 +27,9 @@ public:
 		int  rootId = 0;
 
 		lemon::digraphReader(graph, is).
-				arcMap("weights", weights).
-				arcMap("labels", labels).
-				arcMap("types", types).
+				arcMap("weight", weights).
+				arcMap("label", labels).
+				arcMap("type", types).
 				attribute("undirected", isUndirected).
 				attribute("root", rootId).
 				run();
@@ -74,6 +78,8 @@ private:
 
 	std::string _filename;
 };
+
+} // namespace host
 
 #endif // HOST_GRAPHS_WEIGHTED_GRAPH_READER_H__
 

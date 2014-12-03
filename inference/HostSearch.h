@@ -5,6 +5,8 @@
 #include "ArcTerm.h"
 #include "HigherOrderArcTerm.h"
 
+namespace host {
+
 class HostSearch {
 
 public:
@@ -39,9 +41,9 @@ public:
 	 *              constraints could be found.
 	 */
 	bool find(
-			host::ArcSelection&     mst,
-			double&                  value,
-			unsigned int             maxIterations = 1000);
+			host::ArcSelection& mst,
+			double&             value,
+			unsigned int        maxIterations = 1000);
 
 private:
 
@@ -87,6 +89,8 @@ private:
 
 	const host::Graph& _graph;
 };
+
+} // namespace host
 
 #endif // HOST_INFERENCE_HOST_SEARCH_H__
 

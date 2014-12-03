@@ -5,6 +5,8 @@
 
 logger::LogChannel hostsearchlog("hostsearchlog", "[HostSearch] ");
 
+namespace host {
+
 void
 HostSearch::addTerm(ArcTerm* term) {
 
@@ -147,3 +149,5 @@ HostSearch::gradient(
 		i += term->numLambdas();
 	}
 }
+
+} // namespace host
