@@ -1,5 +1,6 @@
 #include <lemon/min_cost_arborescence.h>
 #include <util/Logger.h>
+#include <graph/Logging.h>
 #include "ProximalBundleMethod.h"
 #include "HostSearch.h"
 
@@ -50,12 +51,17 @@ HostSearch::find(
 	value = bundleMethod.getOptimalValue();
 
 	LOG_ALL(hostsearchlog)
-			<< "final weights are:" << std::endl;
+			<< "final weights are:" << _graph << std::endl;
 	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
-		LOG_ALL(hostsearchlog)
-				<< _graph.id(_graph.source(arc)) << " - "
-				<< _graph.id(_graph.target(arc)) << ": "
-				<< _currentWeights[arc] << std::endl;
+		LOG_ALL(hostsearchlog) << arc << ": " << _currentWeights[arc] << std::endl;
+
+	LOG_DEBUG(hostsearchlog)
+			<< "mst is:" << _graph << std::endl;
+	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
+		LOG_DEBUG(hostsearchlog) << arc << ": " << mst[arc] << std::endl;
+
+	LOG_DEBUG(hostsearchlog)
+			<< "length of mst is " << value << std::endl;
 
 	if (bundleMethod.getStatus() == ProximalBundleMethod<ValueGradientCallback>::ExactOptimiumFound)
 		return true;
