@@ -1,0 +1,34 @@
+#
+# A cycle of conflicts with two zero edges:
+#
+#     A--#--B
+#     |\   /|
+#     | \ / |
+#     #  0  #
+#     | / \ |
+#     |/   \|
+#     D--#--C
+
+@nodes
+label	
+A
+B
+C
+D
+
+@edges
+				weight	type	label
+
+# conflict edges
+A		B		0		1		0
+B		C		0		1		0
+C		D		0		1		0
+D		A		0		1		0
+
+# zero edges
+A		C		0		0		0
+B		D		0		0		0
+
+@attributes
+undirected 1
+root 0
