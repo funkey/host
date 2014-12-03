@@ -23,6 +23,11 @@ public:
 	iterator end() { return _arcs.end(); }
 	const_iterator end() const { return _arcs.end(); }
 
+	size_t size() const { return _arcs.size(); }
+
+	const Arc& operator[](size_t i) const { return _arcs[i]; }
+	Arc& operator[](size_t i) { return _arcs[i]; }
+
 	bool operator==(const Edge& other) const { return _arcs == other._arcs; }
 
 	bool operator<(const Edge& other) const { return *_arcs.begin() < *other._arcs.begin(); }
