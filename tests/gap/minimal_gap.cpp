@@ -2,6 +2,7 @@
 #include <io/WeightedGraphReader.h>
 #include <inference/ExplicitWeightTerm.h>
 #include <inference/CandidateConflictTerm.h>
+#include <inference/ConflictChainTerm.h>
 #include <inference/HostSearch.h>
 
 void minimal_gap() {
@@ -31,10 +32,29 @@ void minimal_gap() {
 
 	host::ArcSelection mst(graph);
 	double value;
-	bool optimal = search.find(mst, value);
+	bool optimal;
+
+	LOG_DEBUG(testslog) << std::endl;
+	LOG_DEBUG(testslog) << std::endl;
+	LOG_DEBUG(testslog) << "running minimal_gap without chain terms" << std::endl;
+	LOG_DEBUG(testslog) << std::endl;
+	LOG_DEBUG(testslog) << std::endl;
+
+	optimal = search.find(mst, value);
 
 	// check if the correct solution was found
 	BOOST_CHECK(!optimal);
 	BOOST_CHECK_SMALL(value, 1e-6);
+
+	LOG_DEBUG(testslog) << std::endl;
+	LOG_DEBUG(testslog) << std::endl;
+	LOG_DEBUG(testslog) << "running minimal_gap with chain terms" << std::endl;
+	LOG_DEBUG(testslog) << std::endl;
+	LOG_DEBUG(testslog) << std::endl;
+
+	host::ConflictChainTerm conflictChainTerm(graph, types, 3);
+
+	search.addTerm(&conflictChainTerm);
+	optimal = search.find(mst, value);
 }
 

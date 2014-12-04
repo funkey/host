@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_monitor.hpp>
 #include <boost/filesystem.hpp>
+#include <util/Logger.h>
 
 using namespace boost::unit_test;
 
@@ -25,5 +26,7 @@ using namespace boost::unit_test;
                                }
 
 boost::filesystem::path dir_of(const char* filename);
+
+extern logger::LogChannel testslog;
 
 #endif // TESTS_H__

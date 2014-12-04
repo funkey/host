@@ -3,8 +3,8 @@
 #
 #     A--#--B
 #     |\   /|
-#     | \ / |
-#     #  0  #
+#     | 0 ε |
+#     #  x  #
 #     | / \ |
 #     |/   \|
 #     D--#--C
@@ -27,7 +27,7 @@ D		A		0		1		0
 
 # zero edges
 A		C		0		0		0
-B		D		0		0		0
+B		D		0.1		0		0
 
 @attributes
 undirected 1

@@ -6,9 +6,9 @@
 
 BEGIN_TEST_MODULE(host)
 
-	//ADD_TEST_SUITE(graph);
-	//ADD_TEST_SUITE(conflict_candidates);
-	//ADD_TEST_SUITE(multi_factors);
+	ADD_TEST_SUITE(graph);
+	ADD_TEST_SUITE(conflict_candidates);
+	ADD_TEST_SUITE(multi_factors);
 	ADD_TEST_SUITE(gap);
 
 END_TEST_MODULE()
