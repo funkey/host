@@ -50,7 +50,7 @@ public:
 	 * gradient for each lambda and store it in the range pointed to with the 
 	 * given iterator.
 	 */
-	void gradient(
+	bool gradient(
 			const ArcSelection& mst,
 			Lambdas::iterator          begin,
 			Lambdas::iterator          end);

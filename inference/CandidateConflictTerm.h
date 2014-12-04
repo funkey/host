@@ -49,8 +49,10 @@ public:
 	 * For the given MST (represented as boolean flags on arcs), compute the 
 	 * gradient for each lambda and store it in the range pointed to with the 
 	 * given iterator.
+	 *
+	 * @return true, if the current mst is feasible
 	 */
-	void gradient(
+	bool gradient(
 			const ArcSelection& mst,
 			Lambdas::iterator          begin,
 			Lambdas::iterator          end);

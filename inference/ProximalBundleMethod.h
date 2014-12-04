@@ -17,6 +17,19 @@ class ProximalBundleMethod {
 public:
 
 	/**
+	 * A response that the value and gradient callback sends to the bundle 
+	 * method.
+	 */
+	enum CallbackResponse {
+
+		// continue optimization until one of the abortion criteria is met
+		Continue,
+
+		// stop optimization
+		Stop
+	};
+
+	/**
 	 * The status of the bundle method.
 	 */
 	enum Status {
@@ -32,6 +45,9 @@ public:
 
 		// the maximal number of iterations was exceeded
 		IterationsExceeded,
+
+		// the client stopped us
+		Stopped,
 
 		// there was an error during the optimzation
 		Error
@@ -135,6 +151,11 @@ public:
 	double getOptimalValue() const;
 
 	/**
+	 * Get the gradient at the optimal position after the optimization.
+	 */
+	const std::vector<double>& getOptimalGradient() const;
+
+	/**
 	 * Get the status of the bundle method.
 	 */
 	Status getStatus() const { return _status; }
@@ -192,6 +213,7 @@ private:
 
 	std::vector<double> _optimalPosition;
 	double              _optimalValue;
+	std::vector<double> _optimalGradient;
 	double              _optimalEps;
 
 	GRBEnv      _env;
@@ -225,12 +247,12 @@ _eps(eps),
 _rho(rho),
 _regularizerWeight(regularizerWeight),
 _steplength(0),
-_initialPosition(numDims),
-_proxCenter_t(numDims),
-_previous_proxCenter_t(numDims),
-_lambda_tp1(numDims),
-_lambda_t(numDims),
-_gradient_tp1(numDims),
+_initialPosition(numDims, 0),
+_proxCenter_t(numDims, 0),
+_previous_proxCenter_t(numDims, 0),
+_lambda_tp1(numDims, 0),
+_lambda_t(numDims, 0),
+_gradient_tp1(numDims, 0),
 _optimalPosition(_initialPosition),
 _optimalValue(0),
 _optimalEps(-1) /* not started, yet */,
@@ -271,8 +293,8 @@ template <typename IteratorType>
 void
 ProximalBundleMethod<ValueGradientCallback>::setInitialPosition(IteratorType positionBegin, IteratorType positionEnd) {
 
-	std::copy(positionBegin(), positionEnd(), _initialPosition.begin());
-	std::copy(positionBegin(), positionEnd(), _proxCenter_t.begin());
+	std::copy(positionBegin, positionEnd, _initialPosition.begin());
+	std::copy(positionBegin, positionEnd, _proxCenter_t.begin());
 }
 
 /**
@@ -332,7 +354,13 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 	LOG_DEBUG(proxbundlemethodlog) << "computing first value and gradient" << std::endl;
 
 	// compute value ξ' and gradient g' of original objective
-	_valueGradientCallback(_initialPosition, _value_tp1, _gradient_tp1);
+	CallbackResponse response = _valueGradientCallback(_initialPosition, _value_tp1, _gradient_tp1);
+
+	if (response == Stop) {
+
+		_status = Stopped;
+		return false;
+	}
 
 	// set prox center and initialize objective
 	updateProxCenter(_initialPosition, _value_tp1);
@@ -361,7 +389,7 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 		LOG_DEBUG(proxbundlemethodlog) << "computing value and gradient at current λ^(t+1)" << std::endl;
 
 		// L(λ^(t+1)) (and the gradient, to be used in the next iteration)
-		_valueGradientCallback(_lambda_tp1, _value_tp1, _gradient_tp1);
+		response = _valueGradientCallback(_lambda_tp1, _value_tp1, _gradient_tp1);
 
 		// terminated?
 		_eps_t = _qpValue_tp1 - _proxValue_t;
@@ -381,6 +409,7 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 
 			_optimalPosition = _lambda_tp1;
 			_optimalValue    = _value_tp1;
+			_optimalGradient = _gradient_tp1;
 			_optimalEps      = 0; // hurray!
 			_status          = ExactOptimiumFound;
 
@@ -398,12 +427,30 @@ ProximalBundleMethod<ValueGradientCallback>::optimize() {
 
 			_optimalPosition = _lambda_tp1;
 			_optimalValue    = _value_tp1;
+			_optimalGradient = _gradient_tp1;
 			_optimalEps      = _eps_t;
 			_status          = Converged;
 
 			log();
 
 			return true;
+		}
+
+		if (response == Stop) {
+
+			LOG_DEBUG(proxbundlemethodlog) << "Got stop response." << std::endl;
+			LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
+			LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
+
+			_optimalPosition = _lambda_tp1;
+			_optimalValue    = _value_tp1;
+			_optimalGradient = _gradient_tp1;
+			_optimalEps      = _eps_t;
+			_status          = Stopped;
+
+			log();
+
+			return false;
 		}
 
 		// try to add new hyperplane
@@ -454,6 +501,13 @@ double
 ProximalBundleMethod<ValueGradientCallback>::getOptimalValue() const {
 
 	return _optimalValue;
+}
+
+template <typename ValueGradientCallback>
+const std::vector<double>&
+ProximalBundleMethod<ValueGradientCallback>:: getOptimalGradient() const {
+
+	return _optimalGradient;
 }
 
 template <typename ValueGradientCallback>

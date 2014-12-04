@@ -1,7 +1,6 @@
 #include <lemon/min_cost_arborescence.h>
 #include <util/Logger.h>
 #include <graph/Logging.h>
-#include "ProximalBundleMethod.h"
 #include "HostSearch.h"
 
 logger::LogChannel hostsearchlog("hostsearchlog", "[HostSearch] ");
@@ -20,18 +19,18 @@ HostSearch::addTerm(ArcTerm* term) {
 bool
 HostSearch::find(
 		host::ArcSelection& mst,
-		double&              value,
-		unsigned int         maxIterations) {
+		double&             value,
+		unsigned int        maxIterations) {
 
 	ValueGradientCallback valueGradientCallback(*this, mst);
 
-	ProximalBundleMethod<ValueGradientCallback> bundleMethod(
+	Optimizer optimizer(
 			numLambdas(),
 			maxIterations,
 			valueGradientCallback);
 
-	Lambdas lowerBounds(numLambdas(), -ProximalBundleMethod<ValueGradientCallback>::Infinity);
-	Lambdas upperBounds(numLambdas(),  ProximalBundleMethod<ValueGradientCallback>::Infinity);
+	Lambdas lowerBounds(numLambdas(), -Optimizer::Infinity);
+	Lambdas upperBounds(numLambdas(),  Optimizer::Infinity);
 	Lambdas::iterator li = lowerBounds.begin();
 	Lambdas::iterator ui = upperBounds.begin();
 
@@ -44,11 +43,9 @@ HostSearch::find(
 	}
 
 	for (unsigned int lambdaNum = 0; lambdaNum < numLambdas(); lambdaNum++)
-		bundleMethod.setVariableBound(lambdaNum, lowerBounds[lambdaNum], upperBounds[lambdaNum]);
+		optimizer.setVariableBound(lambdaNum, lowerBounds[lambdaNum], upperBounds[lambdaNum]);
 
-	bundleMethod.optimize();
-
-	value = bundleMethod.getOptimalValue();
+	optimizer.optimize();
 
 	LOG_ALL(hostsearchlog)
 			<< "final weights are:" << _graph << std::endl;
@@ -60,16 +57,27 @@ HostSearch::find(
 	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
 		LOG_DEBUG(hostsearchlog) << arc << ": " << mst[arc] << std::endl;
 
+	if (optimizer.getStatus() == Optimizer::Stopped && _feasibleSolutionFound) {
+
+		value = valueFromFeasibleSolution(
+				optimizer.getOptimalValue(),
+				optimizer.getOptimalPosition(),
+				optimizer.getOptimalGradient());
+		return true;
+	}
+
+	value = optimizer.getOptimalValue();
+
 	LOG_DEBUG(hostsearchlog)
 			<< "length of mst is " << value << std::endl;
 
-	if (bundleMethod.getStatus() == ProximalBundleMethod<ValueGradientCallback>::ExactOptimiumFound)
+	if (optimizer.getStatus() == Optimizer::ExactOptimiumFound)
 		return true;
 
 	return false;
 }
 
-void
+HostSearch::Optimizer::CallbackResponse
 HostSearch::ValueGradientCallback::operator()(
 		const Lambdas& lambdas,
 		double&        value,
@@ -81,7 +89,19 @@ HostSearch::ValueGradientCallback::operator()(
 
 	value = _hostSearch.mst(_mst);
 
-	_hostSearch.gradient(_mst, gradient);
+	bool feasible = _hostSearch.gradient(_mst, gradient);
+
+	LOG_ALL(hostsearchlog) << "current value of dual is " << value << std::endl;
+
+	if (feasible) {
+
+		LOG_USER(hostsearchlog) << "Feasible lower-bound solution found! Stopping optimizer." << std::endl;
+		return Optimizer::Stop;
+
+	} else {
+
+		return Optimizer::Continue;
+	}
 }
 
 size_t
@@ -116,6 +136,13 @@ HostSearch::updateWeights() {
 
 	for (auto* term : _arcTerms)
 		term->addArcWeights(_currentWeights);
+
+	LOG_ALL(hostsearchlog) << "updated weights are:" << std::endl;
+	for (ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
+		LOG_ALL(hostsearchlog)
+				<< "\t" << _graph << arc
+				<< "\t" << _currentWeights[arc] << std::endl;
+	LOG_ALL(hostsearchlog) << std::endl;
 }
 
 double
@@ -142,18 +169,38 @@ HostSearch::mst(host::ArcSelection& currentMst) {
 	return mstValue;
 }
 
-void
+bool
 HostSearch::gradient(
 			const host::ArcSelection& mst,
 			Lambdas&                   gradient) {
 
 	Lambdas::iterator i = gradient.begin();
 
+	_feasibleSolutionFound = true;
+
 	for (auto* term : _higherOrderArcTerms) {
 
-		term->gradient(mst, i, i + term->numLambdas());
+		_feasibleSolutionFound &= term->gradient(mst, i, i + term->numLambdas());
 		i += term->numLambdas();
 	}
+
+	return _feasibleSolutionFound;
+}
+
+double
+HostSearch::valueFromFeasibleSolution(
+		double                    dualValue,
+		const Lambdas&            lambdas,
+		const Lambdas&            gradient) {
+
+	Lambdas::const_iterator l = lambdas.begin();
+	Lambdas::const_iterator g = gradient.begin();
+
+	double offset = 0;
+	for (; l != lambdas.end(); l++, g++)
+		offset += (*l)*(*g);
+
+	return dualValue - offset;
 }
 
 } // namespace host

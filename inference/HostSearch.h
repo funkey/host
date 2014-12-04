@@ -4,6 +4,7 @@
 #include <vector>
 #include "ArcTerm.h"
 #include "HigherOrderArcTerm.h"
+#include "ProximalBundleMethod.h"
 
 namespace host {
 
@@ -47,6 +48,9 @@ public:
 
 private:
 
+	class ValueGradientCallback;
+	typedef ProximalBundleMethod<ValueGradientCallback> Optimizer;
+
 	class ValueGradientCallback {
 
 	public:
@@ -57,7 +61,10 @@ private:
 			_hostSearch(hostSearch),
 			_mst(mst) {}
 
-		void operator()(const Lambdas& x, double& value, Lambdas& gradient);
+		Optimizer::CallbackResponse operator()(
+				const Lambdas& x,
+				double&        value,
+				Lambdas&       gradient);
 
 	private:
 
@@ -77,9 +84,15 @@ private:
 	double mst(host::ArcSelection& currentMst);
 
 	// get the gradient for the given mst
-	void gradient(
+	bool gradient(
 			const host::ArcSelection& mst,
-			Lambdas&                   gradient);
+			Lambdas&                  gradient);
+
+	// fix the dual value of feasible solutions with non-zero gradients
+	double valueFromFeasibleSolution(
+			double                    dualValue,
+			const Lambdas&            lambdas,
+			const Lambdas&            gradient);
 
 	std::vector<ArcTerm*>            _arcTerms;
 	std::vector<HigherOrderArcTerm*> _higherOrderArcTerms;
@@ -88,6 +101,8 @@ private:
 	host::ArcWeights _currentWeights;
 
 	const host::Graph& _graph;
+
+	bool _feasibleSolutionFound;
 };
 
 } // namespace host

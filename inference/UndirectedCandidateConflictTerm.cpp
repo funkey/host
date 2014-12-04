@@ -89,13 +89,15 @@ UndirectedCandidateConflictTerm::constant() {
 	return constant;
 }
 
-void
+bool
 UndirectedCandidateConflictTerm::gradient(
 		const ArcSelection& mst,
 		Lambdas::iterator          begin,
 		Lambdas::iterator          end) {
 
 	Lambdas::iterator i = begin;
+
+	bool feasible = true;
 
 	LOG_ALL(ucctlog) << "gradient is:" << std::endl;
 
@@ -107,10 +109,13 @@ UndirectedCandidateConflictTerm::gradient(
 		for (const auto& arc : arcs)
 			sum += mst[arc];
 
-		*i = sum - (static_cast<int>(arcs.size()) - 1);
+		double gradient = sum - (static_cast<int>(arcs.size()) - 1);
 
-		LOG_ALL(ucctlog) << "\t" << toString(arcs) << ":\t" << *i << std::endl;
+		LOG_ALL(ucctlog) << "\t" << toString(arcs) << ":\t" << gradient << std::endl;
 
+		feasible &= (gradient <= 0);
+
+		*i = gradient;
 		i++;
 	}
 
@@ -120,6 +125,8 @@ UndirectedCandidateConflictTerm::gradient(
 		UTIL_THROW_EXCEPTION(
 				UsageError,
 				"given range of lambdas does not match number of lambdas");
+
+	return feasible;
 }
 
 void

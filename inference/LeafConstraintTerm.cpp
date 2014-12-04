@@ -32,7 +32,7 @@ LeafConstrainedMstSearch::find(
 		nodeNum++;
 	}
 
-	bundleMethod.optimize();
+	//bundleMethod.optimize();
 
 	value = bundleMethod.getOptimalValue();
 

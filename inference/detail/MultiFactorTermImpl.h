@@ -61,8 +61,10 @@ public:
 	 * For the given MST (represented as boolean flags on arcs), compute the 
 	 * gradient for each lambda and store it in the range pointed to with the 
 	 * given iterator.
+	 *
+	 * @return true, if the current mst is feasible
 	 */
-	void gradient(
+	bool gradient(
 			const host::ArcSelection& mst,
 			Lambdas::iterator         begin,
 			Lambdas::iterator         end);
@@ -186,13 +188,15 @@ MultiFactorTermImpl<EdgeType>::constant() {
 }
 
 template <typename EdgeType>
-void
+bool
 MultiFactorTermImpl<EdgeType>::gradient(
 		const host::ArcSelection& mst,
 		Lambdas::iterator         begin,
 		Lambdas::iterator         /*end*/) {
 
 	Lambdas::iterator i = begin;
+
+	bool feasible = true;
 
 	LOG_ALL(meflog) << "gradient is:" << std::endl;
 
@@ -213,6 +217,9 @@ MultiFactorTermImpl<EdgeType>::gradient(
 		if (gradient2 < 0 && lambdas.second < Configuration::LambdaEpsilon)
 			gradient2 = 0;
 
+		feasible &= (gradient1 <= 0);
+		feasible &= (gradient2 <= 0);
+
 		// store the gradients in the same order we retrieved the lambdas
 		*i = gradient1; i++;
 		*i = gradient2; i++;
@@ -225,6 +232,8 @@ MultiFactorTermImpl<EdgeType>::gradient(
 	}
 
 	LOG_ALL(meflog) << std::endl;
+
+	return feasible;
 }
 
 } // namespace detail

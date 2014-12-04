@@ -84,13 +84,6 @@ CandidateConflictTerm::addArcWeights(ArcWeights& weights) {
 		for (const auto& conflictArc : conflict.conflictArcs)
 			weights[conflictArc] += lambda;
 	}
-
-	LOG_ALL(cctlog) << "updated weights are:" << std::endl;
-	for (ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
-		LOG_ALL(cctlog)
-				<< "\t" << _graph << arc
-				<< "\t" << weights[arc] << std::endl;
-	LOG_ALL(cctlog) << std::endl;
 }
 
 double
@@ -107,13 +100,15 @@ CandidateConflictTerm::constant() {
 	return constant;
 }
 
-void
+bool
 CandidateConflictTerm::gradient(
 		const ArcSelection& mst,
 		Lambdas::iterator   begin,
 		Lambdas::iterator   end) {
 
 	Lambdas::iterator i = begin;
+
+	bool feasible = true;
 
 	LOG_ALL(cctlog) << "gradient is:" << std::endl;
 
@@ -123,16 +118,19 @@ CandidateConflictTerm::gradient(
 		for (const auto& edge : exclusive.edges)
 			sum += mst[edge];
 
-		*i = sum - (static_cast<int>(exclusive.edges.size()) - 1);
+		double gradient = sum - (static_cast<int>(exclusive.edges.size()) - 1);
 
-		if (*i < 0 && exclusive.lambda < Configuration::LambdaEpsilon) {
+		if (gradient < 0 && exclusive.lambda < Configuration::LambdaEpsilon) {
 
-			LOG_ALL(cctlog) << "\tfixed from " << (*i) << " to 0, λ is " << exclusive.lambda << std::endl;
-			*i = 0;
+			LOG_ALL(cctlog) << "\tfixed from " << gradient << " to 0, λ is " << exclusive.lambda << std::endl;
+			gradient = 0;
 		}
 
-		LOG_ALL(cctlog) << "\t" << _graph << exclusive.edges << ":\t" << *i << std::endl;
+		LOG_ALL(cctlog) << "\t" << _graph << exclusive.edges << ":\t" << gradient << std::endl;
 
+		feasible &= (gradient <= 0);
+
+		*i = gradient;
 		i++;
 	}
 
@@ -145,19 +143,23 @@ CandidateConflictTerm::gradient(
 		for (const auto& conflictArc : conflict.conflictArcs)
 			sum += mst[conflictArc];
 
-		*i = (static_cast<double>(mst[arc]) - 1)*n + sum;
+		double gradient = (static_cast<double>(mst[arc]) - 1)*n + sum;
 
-		if (*i < 0 && conflict.lambda < Configuration::LambdaEpsilon) {
+		if (gradient < 0 && conflict.lambda < Configuration::LambdaEpsilon) {
 
-			LOG_ALL(cctlog) << "\tfixed from " << (*i) << " to 0, λ is " << conflict.lambda << std::endl;
-			*i = 0;
+			LOG_ALL(cctlog) << "\tfixed from " << gradient << " to 0, λ is " << conflict.lambda << std::endl;
+			gradient = 0;
 		}
 
 		LOG_ALL(cctlog)
 				<< "\t" << _graph << arc
 				<< ": " << conflict.conflictArcs
-				<< ":\t" << *i
+				<< ":\t" << gradient
 				<< std::endl;
+
+		feasible &= (gradient <= 0);
+
+		*i = gradient;
 		i++;
 	}
 
@@ -167,6 +169,8 @@ CandidateConflictTerm::gradient(
 		UTIL_THROW_EXCEPTION(
 				UsageError,
 				"given range of lambdas does not match number of lambdas");
+
+	return feasible;
 }
 
 void
