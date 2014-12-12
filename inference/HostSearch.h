@@ -44,7 +44,8 @@ public:
 	bool find(
 			host::ArcSelection& mst,
 			double&             value,
-			unsigned int        maxIterations = 1000);
+			unsigned int        maxIterations = 1000,
+			const Lambdas&      initialLambdas = Lambdas());
 
 private:
 

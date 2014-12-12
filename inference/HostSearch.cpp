@@ -20,7 +20,8 @@ bool
 HostSearch::find(
 		host::ArcSelection& mst,
 		double&             value,
-		unsigned int        maxIterations) {
+		unsigned int        maxIterations,
+		const Lambdas&      initialLambdas) {
 
 	ValueGradientCallback valueGradientCallback(*this, mst);
 
@@ -44,6 +45,9 @@ HostSearch::find(
 
 	for (unsigned int lambdaNum = 0; lambdaNum < numLambdas(); lambdaNum++)
 		optimizer.setVariableBound(lambdaNum, lowerBounds[lambdaNum], upperBounds[lambdaNum]);
+
+	if (initialLambdas.size() > 0)
+		optimizer.setInitialPosition(initialLambdas.begin(), initialLambdas.end());
 
 	optimizer.optimize();
 
