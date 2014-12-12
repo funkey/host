@@ -63,7 +63,8 @@ HostSearch::find(
 				optimizer.getOptimalValue(),
 				optimizer.getOptimalPosition(),
 				optimizer.getOptimalGradient());
-		return true;
+
+		return false;
 	}
 
 	value = optimizer.getOptimalValue();
@@ -93,15 +94,10 @@ HostSearch::ValueGradientCallback::operator()(
 
 	LOG_ALL(hostsearchlog) << "current value of dual is " << value << std::endl;
 
-	if (feasible) {
+	if (feasible)
+		LOG_USER(hostsearchlog) << "Feasible solution found." << std::endl;
 
-		LOG_USER(hostsearchlog) << "Feasible lower-bound solution found! Stopping optimizer." << std::endl;
-		return Optimizer::Stop;
-
-	} else {
-
-		return Optimizer::Continue;
-	}
+	return Optimizer::Continue;
 }
 
 size_t
