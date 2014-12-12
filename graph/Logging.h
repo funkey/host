@@ -1,6 +1,8 @@
 #ifndef HOST_GRAPHS_LOGGING_H__
 #define HOST_GRAPHS_LOGGING_H__
 
+#include <vector>
+#include <set>
 #include <iostream>
 #include <util/exceptions.h>
 #include "Graph.h"
@@ -10,6 +12,7 @@ std::ostream& operator<<(std::ostream& os, const host::Arc& arc);
 std::ostream& operator<<(std::ostream& os, const std::vector<host::Arc>& arcs);
 std::ostream& operator<<(std::ostream& os, const host::Edge& edge);
 std::ostream& operator<<(std::ostream& os, const std::vector<host::Edge>& edges);
+std::ostream& operator<<(std::ostream& os, const std::set<host::Edge>& edges);
 
 namespace host {
 
