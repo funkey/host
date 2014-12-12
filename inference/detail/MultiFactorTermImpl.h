@@ -28,7 +28,7 @@ public:
 	/**
 	 * Get the number of lambda parameters of this higher order term.
 	 */
-	size_t numLambdas();
+	size_t numLambdas() const;
 
 	/**
 	 * Change the upper and lower bounds for each lambda in the the given 
@@ -91,7 +91,7 @@ private:
 
 template <typename EdgeType>
 size_t
-MultiFactorTermImpl<EdgeType>::numLambdas() {
+MultiFactorTermImpl<EdgeType>::numLambdas() const {
 
 	// two lambdas per factor
 	return 2*_factors.size();

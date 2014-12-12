@@ -4,6 +4,13 @@
 #include "ArcTerm.h"
 #include "Lambdas.h"
 
+/**
+ * A term on multiple arcs. Also known as factor or k-ary interaction.
+ *
+ * Each term realizes a function on the variables it spans. It interacts with 
+ * the DMST problem via lambdas that contribute to the arc weights, thus it is 
+ * an ArcTerm.
+ */
 class HigherOrderArcTerm : public ArcTerm {
 
 public:
@@ -11,7 +18,7 @@ public:
 	/**
 	 * Get the number of lambda parameters of this higher order term.
 	 */
-	virtual size_t numLambdas() = 0;
+	virtual size_t numLambdas() const = 0;
 
 	/**
 	 * Change the upper and lower bounds for each lambda in the the given 

@@ -17,16 +17,54 @@ CandidateConflictTerm::CandidateConflictTerm(
 	findConflictArcs(arcTypes);
 }
 
+size_t
+CandidateConflictTerm::numLambdas() const {
+
+	size_t num= 0;
+
+	for (const auto& term : _exclusiveEdges)
+		num += term.numLambdas();
+	for (const auto& term : _exclusiveArcs)
+		num += term.numLambdas();
+
+	return num;
+}
+
 void
 CandidateConflictTerm::lambdaBounds(
 		Lambdas::iterator beginLower,
 		Lambdas::iterator endLower,
-		Lambdas::iterator,
-		Lambdas::iterator) {
+		Lambdas::iterator beginUpper,
+		Lambdas::iterator endUpper) {
 
-	// all lambdas have to be positive
-	for (Lambdas::iterator i = beginLower; i != endLower; i++)
-		*i = 0;
+	for (auto& exclusive : _exclusiveEdges) {
+
+		exclusive.lambdaBounds(
+				beginLower,
+				beginLower + exclusive.numLambdas(),
+				beginUpper,
+				beginUpper + exclusive.numLambdas());
+
+		beginLower += exclusive.numLambdas();
+		beginUpper += exclusive.numLambdas();
+	}
+
+	for (auto& exclusive : _exclusiveArcs) {
+
+		exclusive.lambdaBounds(
+				beginLower,
+				beginLower + exclusive.numLambdas(),
+				beginUpper,
+				beginUpper + exclusive.numLambdas());
+
+		beginLower += exclusive.numLambdas();
+		beginUpper += exclusive.numLambdas();
+	}
+
+	if (beginUpper != endUpper || beginLower != endLower)
+		UTIL_THROW_EXCEPTION(
+				UsageError,
+				"given range of lambdas does not match number of lambdas");
 }
 
 void
@@ -38,23 +76,14 @@ CandidateConflictTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_
 
 	for (auto& exclusive : _exclusiveEdges) {
 
-		exclusive.lambda = *i; i++;
-
-		LOG_ALL(cctlog)
-				<< "\t" << _graph << exclusive.edges
-				<< ":\t" << exclusive.lambda
-				<< std::endl;
+		exclusive.setLambdas(i, i + exclusive.numLambdas());
+		i += exclusive.numLambdas();
 	}
 
-	for (auto& conflict : _conflictArcs) {
+	for (auto& exclusive : _exclusiveArcs) {
 
-		conflict.lambda = *i; i++;
-
-		LOG_ALL(cctlog)
-				<< "\t" << _graph << conflict.arc
-				<< ": " << conflict.conflictArcs
-				<< ":\t" << conflict.lambda
-				<< std::endl;
+		exclusive.setLambdas(i, i + exclusive.numLambdas());
+		i += exclusive.numLambdas();
 	}
 
 	LOG_ALL(cctlog) << std::endl;
@@ -68,22 +97,11 @@ CandidateConflictTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_
 void
 CandidateConflictTerm::addArcWeights(ArcWeights& weights) {
 
-	// add the edge weight to all arcs of the corresponding edge
-	for (const auto& exclusive : _exclusiveEdges)
-		for (const auto& edge : exclusive.edges)
-			for (const auto& arc : edge)
-				weights[arc] += exclusive.lambda;
+	for (auto& exclusive : _exclusiveEdges)
+		exclusive.addArcWeights(weights);
 
-	for (const auto& conflict : _conflictArcs) {
-
-		const Arc&   arc    = conflict.arc;
-		unsigned int n      = conflict.conflictArcs.size();
-		double       lambda = conflict.lambda;
-
-		weights[arc] += n*lambda;
-		for (const auto& conflictArc : conflict.conflictArcs)
-			weights[conflictArc] += lambda;
-	}
+	for (auto& exclusive : _exclusiveArcs)
+		exclusive.addArcWeights(weights);
 }
 
 double
@@ -92,10 +110,10 @@ CandidateConflictTerm::constant() {
 	double constant = 0;
 
 	for (auto exclusive : _exclusiveEdges)
-		constant -= (static_cast<int>(exclusive.edges.size()) - 1)*exclusive.lambda;
+		constant += exclusive.constant();
 
-	for (const auto& conflict : _conflictArcs)
-		constant -= conflict.conflictArcs.size()*conflict.lambda;
+	for (auto exclusive : _exclusiveArcs)
+		constant += exclusive.constant();
 
 	return constant;
 }
@@ -112,55 +130,16 @@ CandidateConflictTerm::gradient(
 
 	LOG_ALL(cctlog) << "gradient is:" << std::endl;
 
-	for (const auto& exclusive : _exclusiveEdges) {
+	for (auto& exclusive : _exclusiveEdges) {
 
-		int sum = 0;
-		for (const auto& edge : exclusive.edges)
-			sum += mst[edge];
-
-		double gradient = sum - (static_cast<int>(exclusive.edges.size()) - 1);
-
-		if (gradient < 0 && exclusive.lambda < Configuration::LambdaEpsilon) {
-
-			LOG_ALL(cctlog) << "\tfixed from " << gradient << " to 0, λ is " << exclusive.lambda << std::endl;
-			gradient = 0;
-		}
-
-		LOG_ALL(cctlog) << "\t" << _graph << exclusive.edges << ":\t" << gradient << std::endl;
-
-		feasible &= (gradient <= 0);
-
-		*i = gradient;
-		i++;
+		exclusive.gradient(mst, i, i + exclusive.numLambdas());
+		i += exclusive.numLambdas();
 	}
 
-	for (const auto& conflict : _conflictArcs) {
+	for (auto& exclusive : _exclusiveArcs) {
 
-		const Arc&   arc = conflict.arc;
-		unsigned int n   = conflict.conflictArcs.size();
-
-		int sum = 0;
-		for (const auto& conflictArc : conflict.conflictArcs)
-			sum += mst[conflictArc];
-
-		double gradient = (static_cast<double>(mst[arc]) - 1)*n + sum;
-
-		if (gradient < 0 && conflict.lambda < Configuration::LambdaEpsilon) {
-
-			LOG_ALL(cctlog) << "\tfixed from " << gradient << " to 0, λ is " << conflict.lambda << std::endl;
-			gradient = 0;
-		}
-
-		LOG_ALL(cctlog)
-				<< "\t" << _graph << arc
-				<< ": " << conflict.conflictArcs
-				<< ":\t" << gradient
-				<< std::endl;
-
-		feasible &= (gradient <= 0);
-
-		*i = gradient;
-		i++;
+		exclusive.gradient(mst, i, i + exclusive.numLambdas());
+		i += exclusive.numLambdas();
 	}
 
 	LOG_ALL(cctlog) << std::endl;
@@ -201,16 +180,16 @@ CandidateConflictTerm::findExclusiveEdges(const ArcTypes& arcTypes) {
 							"conflict arc (" << _graph.id(_graph.source(arc)) << ", " << _graph.id(_graph.target(arc)) <<
 							" has parallel link arcs: " << _graph << sourceEdge);
 
-				_exclusiveEdges.push_back(ExclusiveEdgesLambda{{sourceEdge,targetEdge},0});
+				_exclusiveEdges.push_back(ExclusiveEdgesTerm(sourceEdge,targetEdge));
 			}
 		}
 	}
 
 	LOG_ALL(cctlog)
-			<< "exclusive arcs are:" << std::endl;
+			<< "exclusive edges are:" << std::endl;
 	for (const auto& exclusive : _exclusiveEdges)
 		LOG_ALL(cctlog)
-				<< "\t" << _graph << exclusive.edges << std::endl;
+				<< "\t" << _graph << exclusive << std::endl;
 	LOG_ALL(cctlog) << std::endl;
 }
 
@@ -267,28 +246,17 @@ CandidateConflictTerm::findConflictArcs(const ArcTypes& arcTypes) {
 		if (arcTypes[arc] != Conflict)
 			continue;
 
-		// get all outgoing conflict arcs
-		std::vector<Arc> conflictArcs;
+		// for each outgoing conflict arc
 		for (OutArcIt out(_graph, _graph.target(arc)); out != lemon::INVALID; ++out)
 			if (arcTypes[out] == Conflict && _graph.target(out) != _graph.source(arc))
-				conflictArcs.push_back(out);
-
-		if (conflictArcs.size() == 0)
-			continue;
-
-		ConflictArcsLambda arcLambda;
-		arcLambda.arc = arc;
-		arcLambda.conflictArcs = conflictArcs;
-
-		_conflictArcs.push_back(arcLambda);
+				_exclusiveArcs.push_back(ExclusiveArcsTerm(arc, out));
 	}
 
 	LOG_ALL(cctlog)
 			<< "conflict arcs are:" << std::endl;
-	for (const auto& arcLambda : _conflictArcs)
+	for (const auto& exclusive : _exclusiveArcs)
 		LOG_ALL(cctlog)
-				<< "\t" << _graph << arcLambda.arc
-				<< ": " << arcLambda.conflictArcs
+				<< "\t" << _graph << exclusive
 				<< std::endl;
 	LOG_ALL(cctlog) << std::endl;
 }

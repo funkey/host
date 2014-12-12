@@ -3,6 +3,8 @@
 
 #include <graph/Graph.h>
 #include "HigherOrderArcTerm.h"
+#include "ExclusiveEdgesTerm.h"
+#include "ExclusiveArcsTerm.h"
 
 namespace host {
 
@@ -18,7 +20,7 @@ public:
 	/**
 	 * Get the number of lambda parameters of this higher order term.
 	 */
-	size_t numLambdas() { return _exclusiveEdges.size() + _conflictArcs.size(); }
+	size_t numLambdas() const;
 
 	/**
 	 * Store the upper and lower bounds for each lambda in the the given ranges.
@@ -54,30 +56,12 @@ public:
 	 */
 	bool gradient(
 			const ArcSelection& mst,
-			Lambdas::iterator          begin,
-			Lambdas::iterator          end);
+			Lambdas::iterator   begin,
+			Lambdas::iterator   end);
 
 private:
 
-	typedef std::vector<Arc>  Arcs;
 	typedef std::vector<Edge> Edges;
-
-	// list of exclusive arcs (not all of them can be selected at the same time) 
-	// and the lambda value assoticated with them
-	struct ExclusiveEdgesLambda {
-
-		Edges  edges;
-		double lambda;
-	};
-
-	// arc and a list of conflict arcs (no conflict arc can be selected, if arc 
-	// is selected) and the lambda value associated with them
-	struct ConflictArcsLambda {
-
-		Arc    arc;
-		Arcs   conflictArcs;
-		double lambda;
-	};
 
 	// find pairs of mutual exclusive arcs
 	void findExclusiveEdges(const ArcTypes& arcTypes);
@@ -88,9 +72,9 @@ private:
 	// find conflict nodes and add an ConflictArcsLambda for each incoming edge
 	void findConflictArcs(const ArcTypes& arcTypes);
 
-	// list of conflict nodes and their lambda values
-	std::vector<ExclusiveEdgesLambda> _exclusiveEdges;
-	std::vector<ConflictArcsLambda>   _conflictArcs;
+	// list of containing terms
+	std::vector<ExclusiveEdgesTerm> _exclusiveEdges;
+	std::vector<ExclusiveArcsTerm>  _exclusiveArcs;
 
 	const Graph& _graph;
 };
