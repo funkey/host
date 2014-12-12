@@ -20,7 +20,7 @@ void exceptionTranslator(const Exception& error) {
 
 int main(int argc, char** argv) {
 
-	util::ProgramOptions::init(argc, argv);
+	util::ProgramOptions::init(argc, argv, true);
 	logger::LogManager::init();
 
 	::boost::unit_test::unit_test_monitor.register_exception_translator<Exception>(&exceptionTranslator);
