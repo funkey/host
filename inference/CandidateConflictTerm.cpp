@@ -196,7 +196,10 @@ CandidateConflictTerm::findExclusiveEdges(const ArcTypes& arcTypes) {
 							"conflict arc (" << _graph.id(_graph.source(arc)) << ", " << _graph.id(_graph.target(arc)) <<
 							" has parallel link arcs: " << _graph << sourceEdge);
 
-				_exclusiveEdges.push_back(ExclusiveEdgesTerm(sourceEdge,targetEdge));
+				ExclusiveEdgesTerm term(sourceEdge,targetEdge);
+
+				if (std::find(_exclusiveEdges.begin(), _exclusiveEdges.end(), term) == _exclusiveEdges.end())
+					_exclusiveEdges.push_back(term);
 			}
 		}
 	}
