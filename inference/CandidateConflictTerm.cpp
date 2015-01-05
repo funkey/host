@@ -78,12 +78,16 @@ CandidateConflictTerm::setLambdas(Lambdas::const_iterator begin, Lambdas::const_
 
 		exclusive.setLambdas(i, i + exclusive.numLambdas());
 		i += exclusive.numLambdas();
+
+		LOG_ALL(cctlog) << exclusive << std::endl;
 	}
 
 	for (auto& exclusive : _exclusiveArcs) {
 
 		exclusive.setLambdas(i, i + exclusive.numLambdas());
 		i += exclusive.numLambdas();
+
+		LOG_ALL(cctlog) << exclusive << std::endl;
 	}
 
 	LOG_ALL(cctlog) << std::endl;
@@ -132,13 +136,25 @@ CandidateConflictTerm::gradient(
 
 	for (auto& exclusive : _exclusiveEdges) {
 
-		exclusive.gradient(mst, i, i + exclusive.numLambdas());
+		feasible &= exclusive.gradient(mst, i, i + exclusive.numLambdas());
+
+		LOG_ALL(cctlog) << exclusive;
+		for (Lambdas::iterator j = i; j != i + exclusive.numLambdas(); j++)
+			LOG_ALL(cctlog) << " " << *j;
+		LOG_ALL(cctlog) << std::endl;
+
 		i += exclusive.numLambdas();
 	}
 
 	for (auto& exclusive : _exclusiveArcs) {
 
-		exclusive.gradient(mst, i, i + exclusive.numLambdas());
+		feasible &= exclusive.gradient(mst, i, i + exclusive.numLambdas());
+
+		LOG_ALL(cctlog) << exclusive;
+		for (Lambdas::iterator j = i; j != i + exclusive.numLambdas(); j++)
+			LOG_ALL(cctlog) << " " << *j;
+		LOG_ALL(cctlog) << std::endl;
+
 		i += exclusive.numLambdas();
 	}
 
