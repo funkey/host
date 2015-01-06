@@ -4,3 +4,12 @@
 [submodule "modules/util"]
 	path = modules/util
 	url = http://github.com/funkey/util
+[submodule "modules/imageprocessing"]
+	path = modules/imageprocessing
+	url = https://github.com/funkey/imageprocessing
+[submodule "modules/pipeline"]
+	path = modules/pipeline
+	url = https://github.com/funkey/pipeline
+[submodule "modules/signals"]
+	path = modules/signals
+	url = https://github.com/funkey/signals
