@@ -13,3 +13,6 @@
 [submodule "modules/signals"]
 	path = modules/signals
 	url = https://github.com/funkey/signals
+[submodule "modules/region_features"]
+	path = modules/region_features
+	url = https://github.com/funkey/region_features
