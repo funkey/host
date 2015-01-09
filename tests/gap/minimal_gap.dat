@@ -15,7 +15,7 @@
 # Solvable, if λ on i->j->k conflict edges are δ, Ε>δ>ε.
 
 @nodes
-label	
+label
 A
 B
 C
@@ -23,21 +23,21 @@ D
 R
 
 @edges
-				weight	type	label
+		weight	type	label
 
 # conflict edges
-A		B		0		1		0
-B		C		0		1		0
-C		D		0		1		0
-D		A		0		1		0
+A	B	0	1	0
+B	C	0	1	0
+C	D	0	1	0
+D	A	0	1	0
 
 # epsilon edges
-A		C		0.3		0		0
-B		D		0.1		0		0
+A	C	0.3	0	0
+B	D	0.1	0	0
 
 # R edges
-R		D		0.1		0		0
-R		C		0.3		0		0
+R	D	0.1	0	0
+R	C	0.3	0	0
 
 @attributes
 undirected 1
