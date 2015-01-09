@@ -1,3 +1,18 @@
+/**
+ * This program reads a stack of images (a volume) that contains labels for 
+ * tubes (i.e., pixels that are supposed to belong to the same neural process 
+ * have the same label) and an intensity volume. For each tube, features are 
+ * computed, like:
+ *
+ *   • statistical region features (size, mean intensity, histogram, ...)
+ *   • shape descriptors (TODO)
+ *   • bounding box (TODO)
+ *   • skeleton (TODO)
+ *   • loose ends (TODO)
+ *
+ * The features are stored in a HDF-file for further processing by other tools.
+ */
+
 #include <iostream>
 
 #include <util/Logger.h>
