@@ -17,38 +17,64 @@
 
 #include <util/Logger.h>
 #include <util/ProgramOptions.h>
-#include <pipeline/Process.h>
-#include <pipeline/Value.h>
-#include <imageprocessing/io/ImageStackDirectoryReader.h>
-#include <features/TubeFeatures.h>
-
-util::ProgramOption optionIntensities(
-		util::_long_name        = "intensities",
-		util::_description_text = "A directory containing the intensity volume.",
-		util::_default_value    = "intensities");
-
-util::ProgramOption optionLabels(
-		util::_long_name        = "labels",
-		util::_description_text = "A directory containing the labeled volume.",
-		util::_default_value    = "volume");
+#include <util/exceptions.h>
+#include <region_features/RegionFeatures.h>
+#include <vigra/hdf5impex.hxx>
 
 util::ProgramOption optionProjectFile(
 		util::_long_name        = "projectFile",
 		util::_short_name       = "p",
-		util::_description_text = "The project file to store the extracted tubes.",
+		util::_description_text = "The project file to read the label and intensity volume and store the features for each tube.",
 		util::_default_value    = "project.hdf");
 
 int main(int argc, char** argv) {
 
-	util::ProgramOptions::init(argc, argv);
-	logger::LogManager::init();
+	try {
 
-	pipeline::Process<ImageStackDirectoryReader> intensityReader(optionIntensities.as<std::string>());
-	pipeline::Process<ImageStackDirectoryReader> labelReader(optionLabels.as<std::string>());
+		util::ProgramOptions::init(argc, argv);
+		logger::LogManager::init();
 
-	pipeline::Value<ImageStack> intensityStack = intensityReader->getOutput();
-	pipeline::Value<ImageStack> labelStack = labelReader->getOutput();
+		// read the label and intensity volumes
 
-	TubeFeatures tubeFeatures;
-	tubeFeatures.computeFeatures(*intensityStack, *labelStack);
+		vigra::HDF5File project(
+				optionProjectFile.as<std::string>(),
+				vigra::HDF5File::OpenMode::ReadWrite);
+
+		vigra::MultiArray<3, int>   labels;
+		vigra::MultiArray<3, float> intensities;
+
+		project.cd("volume");
+		project.readAndResize("labels", labels);
+		project.readAndResize("intensities", intensities);
+
+		// extract tube features
+
+		RegionFeatures<3, float, int> regionFeatures;
+		regionFeatures.computeFeatures(intensities, labels);
+
+		// save them in the project file
+
+		project.root();
+		project.cd_mk("feature_names");
+		for (const std::string& name : regionFeatures.getFeatureNames())
+			project.mkdir(name);
+
+		project.root();
+		project.cd_mk("features");
+
+		for (auto& lf : regionFeatures.getFeatureMap()) {
+
+			int label = lf.first;
+			const std::vector<double>& features = lf.second;
+			double* fp = const_cast<double*>(&features[0]);
+
+			project.write(
+					boost::lexical_cast<std::string>(label),
+					vigra::ArrayVectorView<double>(features.size(), fp));
+		}
+
+	} catch (boost::exception& e) {
+
+		handleException(e, std::cerr);
+	}
 }
