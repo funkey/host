@@ -1,16 +1,6 @@
 /**
- * This program reads a stack of images (a volume) that contains labels for 
- * tubes (i.e., pixels that are supposed to belong to the same neural process 
- * have the same label) and an intensity volume. For each tube, features are 
- * computed, like:
- *
- *   • statistical region features (size, mean intensity, histogram, ...)
- *   • shape descriptors (TODO)
- *   • bounding box (TODO)
- *   • skeleton (TODO)
- *   • loose ends (TODO)
- *
- * The features are stored in a HDF-file for further processing by other tools.
+ * This program reads tubes from an HDF5 file, computes their features, and 
+ * stores the result in the same file.
  */
 
 #include <iostream>
@@ -21,7 +11,7 @@
 #include <util/exceptions.h>
 #include <region_features/RegionFeatures.h>
 #include <tubes/io/Hdf5TubeStore.h>
-#include <tubes/TubeExtractor.h>
+#include <tubes/FeatureExtractor.h>
 
 util::ProgramOption optionProjectFile(
 		util::_long_name        = "projectFile",
@@ -36,9 +26,10 @@ int main(int argc, char** argv) {
 		util::ProgramOptions::init(argc, argv);
 		logger::LogManager::init();
 
-		// read the label volume
+		// read the label and intensity volumes
 
 		vigra::MultiArray<3, int>   labels;
+		vigra::MultiArray<3, float> intensities;
 
 		{
 			vigra::HDF5File project(
@@ -46,15 +37,22 @@ int main(int argc, char** argv) {
 					vigra::HDF5File::OpenMode::ReadWrite);
 
 			project.cd("volume");
+			project.readAndResize("intensities", intensities);
 			project.readAndResize("labels", labels);
 		}
 
-		Hdf5TubeStore store(optionProjectFile.as<std::string>());
-		TubeExtractor extractor(&store);
-		extractor.extractFrom(labels);
+		// create an hdf5 tube store
+
+		Hdf5TubeStore tubeStore(optionProjectFile.as<std::string>());
+
+		// extract and save tube features
+
+		FeatureExtractor extractor(&tubeStore);
+		extractor.extractFrom(intensities, labels);
 
 	} catch (boost::exception& e) {
 
 		handleException(e, std::cerr);
 	}
 }
+
