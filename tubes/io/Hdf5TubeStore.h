@@ -29,6 +29,11 @@ public:
 	 void saveFeatureNames(const std::vector<std::string>& names) override;
 
 	/**
+	 * Store the given tube skeletons.
+	 */
+	void saveSkeletons(const Skeletons& skeletons) override;
+
+	/**
 	 * Get all tube ids that this store offers.
 	 */
 	 TubeIds getTubeIds() override;
@@ -45,6 +50,12 @@ public:
 	 * property map.
 	 */
 	 void retrieveFeatures(const TubeIds& ids, Features& features) override;
+
+	/**
+	 * Get the skeletons for the given tube ids and store them in the given 
+	 * property map.
+	 */
+	void retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) override;
 
 private:
 

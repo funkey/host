@@ -3,6 +3,7 @@
 
 #include "Volumes.h"
 #include "Features.h"
+#include "Skeletons.h"
 
 class TubeStore {
 
@@ -24,6 +25,11 @@ public:
 	virtual void saveFeatureNames(const std::vector<std::string>& names) = 0;
 
 	/**
+	 * Store the given tube skeletons.
+	 */
+	virtual void saveSkeletons(const Skeletons& skeletons) = 0;
+
+	/**
 	 * Get all tube ids that this store offers.
 	 */
 	virtual TubeIds getTubeIds() = 0;
@@ -40,6 +46,12 @@ public:
 	 * property map.
 	 */
 	virtual void retrieveFeatures(const TubeIds& ids, Features& features) = 0;
+
+	/**
+	 * Get the skeletons for the given tube ids and store them in the given 
+	 * property map.
+	 */
+	virtual void retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) = 0;
 };
 
 #endif // HOST_TUBES_IO_TUBE_STORE_H__

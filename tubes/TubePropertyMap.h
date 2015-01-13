@@ -18,6 +18,12 @@ public:
 	const T& operator[](TubeId id) const { return _map.at(id); }
 
 	/**
+	 * Insert an element into the map. Returns true, if a new element was 
+	 * inserted, and false, if an existing element was overwritten.
+	 */
+	bool insert(TubeId id, T&& value) { return _map.insert(std::make_pair(id, std::forward<T>(value))).second; }
+
+	/**
 	 * Direct iterator access.
 	 */
 	iterator       begin()       { return _map.begin(); }

@@ -12,6 +12,7 @@
 #include <region_features/RegionFeatures.h>
 #include <tubes/io/Hdf5TubeStore.h>
 #include <tubes/FeatureExtractor.h>
+#include <tubes/SkeletonExtractor.h>
 
 util::ProgramOption optionProjectFile(
 		util::_long_name        = "projectFile",
@@ -47,8 +48,17 @@ int main(int argc, char** argv) {
 
 		// extract and save tube features
 
-		FeatureExtractor extractor(&tubeStore);
-		extractor.extractFrom(intensities, labels);
+		LOG_USER(logger::out) << "extracting features..." << std::endl;
+
+		FeatureExtractor featureExtractor(&tubeStore);
+		featureExtractor.extractFrom(intensities, labels);
+
+		// extract and save tube skeletons
+
+		LOG_USER(logger::out) << "extracting skeletons..." << std::endl;
+
+		SkeletonExtractor skeletonExtractor(&tubeStore);
+		skeletonExtractor.extract();
 
 	} catch (boost::exception& e) {
 

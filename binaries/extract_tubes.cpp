@@ -1,16 +1,7 @@
 /**
- * This program reads a stack of images (a volume) that contains labels for 
- * tubes (i.e., pixels that are supposed to belong to the same neural process 
- * have the same label) and an intensity volume. For each tube, features are 
- * computed, like:
- *
- *   • statistical region features (size, mean intensity, histogram, ...)
- *   • shape descriptors (TODO)
- *   • bounding box (TODO)
- *   • skeleton (TODO)
- *   • loose ends (TODO)
- *
- * The features are stored in a HDF-file for further processing by other tools.
+ * This program reads a volume that contains labels for tubes (i.e., pixels that 
+ * are supposed to belong to the same neural process have the same label) from 
+ * an HDF5 file, and stores the tubes in the same file for further processing.
  */
 
 #include <iostream>
@@ -26,7 +17,7 @@
 util::ProgramOption optionProjectFile(
 		util::_long_name        = "projectFile",
 		util::_short_name       = "p",
-		util::_description_text = "The project file to read the label and intensity volume and store the features for each tube.",
+		util::_description_text = "The project file to read the label volume and store the tubes.",
 		util::_default_value    = "project.hdf");
 
 int main(int argc, char** argv) {

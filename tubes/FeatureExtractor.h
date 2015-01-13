@@ -1,6 +1,7 @@
 #ifndef HOST_TUBES_FEATURE_EXTRACTOR_H__
 #define HOST_TUBES_FEATURE_EXTRACTOR_H__
 
+#include <util/assert.h>
 #include <tubes/io/TubeStore.h>
 
 class FeatureExtractor {
@@ -17,28 +18,14 @@ public:
 	 */
 	void extractFrom(
 			vigra::MultiArrayView<3, float> intensities,
-			vigra::MultiArrayView<3, int>   labels) {
-
-		Features features;
-		RegionFeatures<3, float, int> regionFeatures(intensities, labels);
-
-		// Here we assume that the values in the labels volume match the region 
-		// ids (which is true, for now).
-		regionFeatures.fill(features);
-
-		_store->saveFeatures(features);
-		_store->saveFeatureNames(regionFeatures.getFeatureNames());
-	}
+			vigra::MultiArrayView<3, int>   labels);
 
 	/**
 	 * Extract features for a set of tubes given as individual volumes.
 	 */
 	void extractFrom(
 			vigra::MultiArrayView<3, float> intensities,
-			const Volumes&                  volumes) {
-
-		// TODO
-	}
+			const Volumes&                  volumes);
 
 private:
 
