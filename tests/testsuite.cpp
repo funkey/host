@@ -10,6 +10,7 @@ BEGIN_TEST_MODULE(host)
 	ADD_TEST_SUITE(conflict_candidates);
 	ADD_TEST_SUITE(multi_factors);
 	ADD_TEST_SUITE(gap);
+	ADD_TEST_SUITE(imageprocessing);
 
 END_TEST_MODULE()
 
