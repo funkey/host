@@ -1,4 +1,3 @@
-#include <vigra/multi_impex.hxx>
 #include <util/assert.h>
 #include "Skeleton.h"
 
@@ -98,11 +97,6 @@ Skeleton::findFirstNode(ExplicitVolume<char>& skeleton) {
 		if (skeleton[i] > 0 && numNeighbors(i, skeleton) != 2)
 			return i;
 
-	vigra::MultiArray<3, float> tmp = skeleton.data();
-	vigra::exportVolume(
-			tmp,
-			vigra::VolumeExportInfo("debug/problem_skeleton", ".tif"));
-
 	UTIL_THROW_EXCEPTION(
 			UsageError,
 			"skeleton image does not contain a valid starting point");
@@ -120,9 +114,9 @@ Skeleton::numNeighbors(const vigra::Shape3& pos, ExplicitVolume<char>& skeleton)
 	int ey = (pos[1] == skeleton.height() - 1 ? 0 : 1);
 	int ez = (pos[2] == skeleton.depth()  - 1 ? 0 : 1);
 
-	for (int dz = sz; dz != ez; dz++)
-	for (int dy = sy; dy != ey; dy++)
-	for (int dx = sx; dx != ex; dx++) {
+	for (int dz = sz; dz <= ez; dz++)
+	for (int dy = sy; dy <= ey; dy++)
+	for (int dx = sx; dx <= ex; dx++) {
 
 		if (skeleton(pos[0] + dx, pos[1] + dy, pos[2] + dz) > 0)
 			num++;
@@ -139,7 +133,8 @@ Skeleton::traverse(vigra::Shape3 pos, ExplicitVolume<char>& skeleton, ExplicitVo
 
 	visited[pos] = true;
 
-	bool isNode = (numNeighbors(pos, skeleton) != 2);
+	int neighbors = numNeighbors(pos, skeleton);
+	bool isNode = (neighbors != 2);
 
 	if (isNode)
 		openNode(pos);
@@ -153,14 +148,19 @@ Skeleton::traverse(vigra::Shape3 pos, ExplicitVolume<char>& skeleton, ExplicitVo
 	int ey = (pos[1] == skeleton.height() - 1 ? 0 : 1);
 	int ez = (pos[2] == skeleton.depth()  - 1 ? 0 : 1);
 
-	for (int dz = sz; dz != ez; dz++)
-	for (int dy = sy; dy != ey; dy++)
-	for (int dx = sx; dx != ex; dx++) {
+	for (int dz = sz; dz <= ez && neighbors > 0; dz++)
+	for (int dy = sy; dy <= ey && neighbors > 0; dy++)
+	for (int dx = sx; dx <= ex && neighbors > 0; dx++) {
 
 		vigra::Shape3 p = pos + vigra::Shape3(dx, dy, dz);
 
-		if (skeleton[p] > 0 && !visited[p])
-			traverse(p, skeleton, visited);
+		if (skeleton[p] > 0) {
+
+			neighbors--;
+
+			if (!visited[p])
+				traverse(p, skeleton, visited);
+		}
 	}
 
 	if (isNode)
