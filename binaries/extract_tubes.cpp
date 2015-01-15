@@ -6,11 +6,11 @@
 
 #include <iostream>
 
-#include <vigra/hdf5impex.hxx>
 #include <util/Logger.h>
 #include <util/ProgramOptions.h>
 #include <util/exceptions.h>
 #include <region_features/RegionFeatures.h>
+#include <volumes/io/Hdf5VolumeStore.h>
 #include <tubes/io/Hdf5TubeStore.h>
 #include <tubes/TubeExtractor.h>
 
@@ -29,16 +29,10 @@ int main(int argc, char** argv) {
 
 		// read the label volume
 
-		vigra::MultiArray<3, int>   labels;
+		ExplicitVolume<int> labels;
 
-		{
-			vigra::HDF5File project(
-					optionProjectFile.as<std::string>(),
-					vigra::HDF5File::OpenMode::ReadWrite);
-
-			project.cd("volume");
-			project.readAndResize("labels", labels);
-		}
+		Hdf5VolumeStore volumeStore(optionProjectFile.as<std::string>());
+		volumeStore.retrieveLabels(labels);
 
 		Hdf5TubeStore store(optionProjectFile.as<std::string>());
 		TubeExtractor extractor(&store);

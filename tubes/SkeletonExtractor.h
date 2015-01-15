@@ -21,9 +21,12 @@ public:
 
 private:
 
+	// make a volume isotropic by downsampling the finest dimensions
+	ExplicitVolume<unsigned char> makeIsotropic(const ExplicitVolume<unsigned char>& volume);
+
 	TubeStore* _store;
 
-	Skeletonize<char> _skeletonize;
+	Skeletonize<unsigned char> _skeletonize;
 };
 
 #endif // HOST_TUBES_SKELETON_EXTRACTOR_H__

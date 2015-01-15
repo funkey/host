@@ -1,6 +1,7 @@
 #ifndef HOST_TUBES_TUBE_EXTRACTOR_H__
 #define HOST_TUBES_TUBE_EXTRACTOR_H__
 
+#include <imageprocessing/ExplicitVolume.h>
 #include <tubes/io/TubeStore.h>
 
 /**
@@ -18,7 +19,7 @@ public:
 	 * Extract tubes from a label image. The values of the label image are 
 	 * interpreted as tube ids.
 	 */
-	void extractFrom(vigra::MultiArray<3, int> labels);
+	void extractFrom(ExplicitVolume<int>& labels);
 
 private:
 

@@ -2,13 +2,17 @@
 #define HOST_TUBES_IO_HDF_TUBE_STORE_H__
 
 #include <vigra/hdf5impex.hxx>
+#include <volumes/io/Hdf5VolumeReader.h>
+#include <volumes/io/Hdf5VolumeWriter.h>
 #include "TubeStore.h"
 
-class Hdf5TubeStore : public TubeStore {
+class Hdf5TubeStore : public TubeStore, public Hdf5VolumeReader, public Hdf5VolumeWriter {
 
 public:
 
 	Hdf5TubeStore(std::string projectFile) :
+		Hdf5VolumeReader(_hdfFile),
+		Hdf5VolumeWriter(_hdfFile),
 		_hdfFile(
 				projectFile,
 				vigra::HDF5File::OpenMode::ReadWrite) {}

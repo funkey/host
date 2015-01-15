@@ -12,7 +12,7 @@
 #include <pipeline/Process.h>
 #include <pipeline/Value.h>
 #include <imageprocessing/io/ImageStackDirectoryReader.h>
-#include <vigra/hdf5impex.hxx>
+#include <volumes/io/Hdf5VolumeStore.h>
 
 util::ProgramOption optionIntensities(
 		util::_long_name        = "intensities",
@@ -54,32 +54,17 @@ int main(int argc, char** argv) {
 					UsageError,
 					"intensity and label stacks have different sizes");
 
-		// create vigra multi_arrays
+		// create volumes from stacks
 
-		vigra::MultiArray<3, int>   labels(vigra::Shape3(width, height, depth));
-		vigra::MultiArray<3, float> intensities(vigra::Shape3(width, height, depth));
-
-		// fill volume image by image
-		for (unsigned int i = 0; i < depth; i++) {
-
-			vigra::copyMultiArray(
-					*(*labelStack)[i],
-					labels.bind<2>(i));
-
-			vigra::copyMultiArray(
-					*(*intensityStack)[i],
-					intensities.bind<2>(i));
-		}
+		ExplicitVolume<float> intensities(*intensityStack);
+		ExplicitVolume<int>   labels(*labelStack);
 
 		// store them in the project file
 
-		vigra::HDF5File project(
-				optionProjectFile.as<std::string>(),
-				vigra::HDF5File::OpenMode::ReadWrite);
+		Hdf5VolumeStore volumeStore(optionProjectFile.as<std::string>());
 
-		project.cd_mk("volume");
-		project.write("labels", labels);
-		project.write("intensities", intensities);
+		volumeStore.saveIntensities(intensities);
+		volumeStore.saveLabels(labels);
 
 	} catch (boost::exception& e) {
 

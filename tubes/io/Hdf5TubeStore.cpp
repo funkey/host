@@ -11,39 +11,13 @@ Hdf5TubeStore::saveVolumes(const Volumes& volumes) {
 	_hdfFile.cd_mk("tubes");
 	_hdfFile.cd_mk("volumes");
 
-	vigra::MultiArray<1, float> bb(6);
-	vigra::MultiArray<1, float> res(3);
-
 	for (auto& p : volumes) {
 
-		TubeId                      id     = p.first;
-		const ExplicitVolume<char>& volume = p.second;
+		TubeId                               id     = p.first;
+		const ExplicitVolume<unsigned char>& volume = p.second;
+		std::string                          name   = boost::lexical_cast<std::string>(id);
 
-		// the volume
-		_hdfFile.write(
-				boost::lexical_cast<std::string>(id),
-				volume.data());
-
-		// bounding-box
-		bb[0] = volume.getBoundingBox().getMinX();
-		bb[1] = volume.getBoundingBox().getMinY();
-		bb[2] = volume.getBoundingBox().getMinZ();
-		bb[3] = volume.getBoundingBox().getMaxX();
-		bb[4] = volume.getBoundingBox().getMaxY();
-		bb[5] = volume.getBoundingBox().getMaxZ();
-		_hdfFile.writeAttribute(
-				boost::lexical_cast<std::string>(id),
-				"bounding box",
-				bb);
-
-		// resolution
-		res[0] = volume.getResolutionX();
-		res[1] = volume.getResolutionY();
-		res[2] = volume.getResolutionZ();
-		_hdfFile.writeAttribute(
-				boost::lexical_cast<std::string>(id),
-				"resolution",
-				res);
+		writeVolume(volume, name);
 	}
 }
 
@@ -143,35 +117,13 @@ Hdf5TubeStore::retrieveVolumes(const TubeIds& ids, Volumes& volumes, bool onlyGe
 
 	_hdfFile.cd("/tubes/volumes");
 
-	vigra::MultiArray<1, float> bb(6);
-	vigra::MultiArray<1, float> res(3);
-
 	for (TubeId id : ids) {
 
 		std::string name = boost::lexical_cast<std::string>(id);
 
-		ExplicitVolume<char> volume;
+		ExplicitVolume<unsigned char> volume;
 
-		// the volume
-		if (!onlyGeometry)
-			_hdfFile.readAndResize(name, volume.data());
-
-		LOG_DEBUG(hdf5storelog) << "read volume of size " << volume.data().shape() << std::endl;
-
-		// bounding-box
-		_hdfFile.readAttribute(
-				name,
-				"bounding box",
-				bb);
-		volume.getBoundingBox().setMin(bb[0], bb[1], bb[2]);
-		volume.getBoundingBox().setMax(bb[3], bb[4], bb[5]);
-
-		// resolution
-		_hdfFile.readAttribute(
-				name,
-				"resolution",
-				res);
-		volume.setResolution(res[0], res[1], res[2]);
+		readVolume(volume, name, onlyGeometry);
 
 		volumes.insert(id, std::move(volume));
 	}

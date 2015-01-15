@@ -2,14 +2,18 @@
 #include "TubeExtractor.h"
 
 void
-TubeExtractor::extractFrom(vigra::MultiArray<3, int> labels) {
+TubeExtractor::extractFrom(ExplicitVolume<int>& labels) {
 
 	std::map<TubeId, BoundingBox> bbs;
 
+	float resX = labels.getResolutionX();
+	float resY = labels.getResolutionY();
+	float resZ = labels.getResolutionZ();
+
 	// get the bounding boxes of all tubes
-	for (int z = 0; z < labels.shape(2); z++)
-	for (int y = 0; y < labels.shape(1); y++)
-	for (int x = 0; x < labels.shape(0); x++) {
+	for (unsigned int z = 0; z < labels.depth();  z++)
+	for (unsigned int y = 0; y < labels.height(); y++)
+	for (unsigned int x = 0; x < labels.width();  x++) {
 
 		TubeId id = labels(x, y, z);
 
@@ -27,19 +31,22 @@ TubeExtractor::extractFrom(vigra::MultiArray<3, int> labels) {
 		TubeId       id = p.first;
 		BoundingBox& bb = p.second;
 
-		// TODO: set resolution
-		volumes[id].setBoundingBox(bb);
-		vigra::MultiArray<3, char> data(vigra::Shape3(bb.width(), bb.height(), bb.depth()));
+		// set volume properties
+		volumes[id].setBoundingBox(bb*vigra::TinyVector<float, 3>(resX, resY, resZ));
+		volumes[id].setResolution(
+				labels.getResolutionX(),
+				labels.getResolutionY(),
+				labels.getResolutionZ());
 
-		// copy
+		volumes[id].data() = vigra::MultiArray<3, char>(vigra::Shape3(bb.width(), bb.height(), bb.depth()));
+
+		// copy data
 		vigra::transformMultiArray(
-				labels.subarray(
+				labels.data().subarray(
 						vigra::Shape3(bb.getMinX(), bb.getMinY(), bb.getMinZ()),
 						vigra::Shape3(bb.getMaxX(), bb.getMaxY(), bb.getMaxZ())),
-				data,
+				volumes[id].data(),
 				(vigra::functor::Arg1() == vigra::functor::Param(id)));
-
-		volumes[id].data() = std::move(data);
 	}
 
 	// save them

@@ -1,15 +1,15 @@
 #include <util/assert.h>
 #include "Skeleton.h"
 
-Skeleton::Skeleton(const ExplicitVolume<char>& skeleton) {
+Skeleton::Skeleton(const ExplicitVolume<unsigned char>& skeleton) {
 
 	createGraph();
 
-	ExplicitVolume<char> temp = skeleton;
+	ExplicitVolume<unsigned char> temp = skeleton;
 	createFromVolume(temp);
 }
 
-Skeleton::Skeleton(ExplicitVolume<char>&& skeleton) {
+Skeleton::Skeleton(ExplicitVolume<unsigned char>&& skeleton) {
 
 	createGraph();
 	createFromVolume(skeleton);
@@ -76,7 +76,7 @@ Skeleton::deleteGraph() {
 }
 
 void
-Skeleton::createFromVolume(ExplicitVolume<char>& skeleton) {
+Skeleton::createFromVolume(ExplicitVolume<unsigned char>& skeleton) {
 
 	setBoundingBox(skeleton.getBoundingBox());
 
@@ -89,7 +89,7 @@ Skeleton::createFromVolume(ExplicitVolume<char>& skeleton) {
 }
 
 vigra::Shape3
-Skeleton::findFirstNode(ExplicitVolume<char>& skeleton) {
+Skeleton::findFirstNode(ExplicitVolume<unsigned char>& skeleton) {
 
 	vigra::MultiCoordinateIterator<3> i(skeleton.data().shape());
 
@@ -103,7 +103,7 @@ Skeleton::findFirstNode(ExplicitVolume<char>& skeleton) {
 }
 
 int
-Skeleton::numNeighbors(const vigra::Shape3& pos, ExplicitVolume<char>& skeleton) {
+Skeleton::numNeighbors(const vigra::Shape3& pos, ExplicitVolume<unsigned char>& skeleton) {
 
 	int num = 0;
 
@@ -129,17 +129,21 @@ Skeleton::numNeighbors(const vigra::Shape3& pos, ExplicitVolume<char>& skeleton)
 }
 
 void
-Skeleton::traverse(vigra::Shape3 pos, ExplicitVolume<char>& skeleton, ExplicitVolume<bool>& visited) {
+Skeleton::traverse(vigra::Shape3 pos, ExplicitVolume<unsigned char>& skeleton, ExplicitVolume<bool>& visited) {
 
 	visited[pos] = true;
+
+	float x, y, z;
+	skeleton.getRealLocation(pos[0], pos[1], pos[2], x, y, z);
+	Position realPos(x, y, z);
 
 	int neighbors = numNeighbors(pos, skeleton);
 	bool isNode = (neighbors != 2);
 
 	if (isNode)
-		openNode(pos);
+		openNode(realPos);
 	else
-		extendEdge(pos);
+		extendEdge(realPos);
 
 	int sx = (pos[0] == 0 ? 0 : -1);
 	int sy = (pos[1] == 0 ? 0 : -1);
@@ -148,9 +152,12 @@ Skeleton::traverse(vigra::Shape3 pos, ExplicitVolume<char>& skeleton, ExplicitVo
 	int ey = (pos[1] == skeleton.height() - 1 ? 0 : 1);
 	int ez = (pos[2] == skeleton.depth()  - 1 ? 0 : 1);
 
-	for (int dz = sz; dz <= ez && neighbors > 0; dz++)
-	for (int dy = sy; dy <= ey && neighbors > 0; dy++)
-	for (int dx = sx; dx <= ex && neighbors > 0; dx++) {
+	// as soon as 'neighbors' is negative, we know that there are no more 
+	// neighbors left to test (0 is not sufficient, since we count ourselves as 
+	// well)
+	for (int dz = sz; dz <= ez && neighbors >= 0; dz++)
+	for (int dy = sy; dy <= ey && neighbors >= 0; dy++)
+	for (int dx = sx; dx <= ex && neighbors >= 0; dx++) {
 
 		vigra::Shape3 p = pos + vigra::Shape3(dx, dy, dz);
 
@@ -164,11 +171,11 @@ Skeleton::traverse(vigra::Shape3 pos, ExplicitVolume<char>& skeleton, ExplicitVo
 	}
 
 	if (isNode)
-		closeNode(pos);
+		closeNode(realPos);
 }
 
 void
-Skeleton::openNode(vigra::Shape3 pos) {
+Skeleton::openNode(Position pos) {
 
 	Node node = _graph->addNode();
 
@@ -186,13 +193,13 @@ Skeleton::openNode(vigra::Shape3 pos) {
 }
 
 void
-Skeleton::extendEdge(vigra::Shape3 pos) {
+Skeleton::extendEdge(Position pos) {
 
 	_currentSegment.push_back(pos);
 }
 
 void
-Skeleton::closeNode(vigra::Shape3) {
+Skeleton::closeNode(Position) {
 
 	_currentPath.pop();
 }

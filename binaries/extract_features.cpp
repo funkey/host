@@ -5,11 +5,11 @@
 
 #include <iostream>
 
-#include <vigra/hdf5impex.hxx>
 #include <util/Logger.h>
 #include <util/ProgramOptions.h>
 #include <util/exceptions.h>
 #include <region_features/RegionFeatures.h>
+#include <volumes/io/Hdf5VolumeStore.h>
 #include <tubes/io/Hdf5TubeStore.h>
 #include <tubes/FeatureExtractor.h>
 #include <tubes/SkeletonExtractor.h>
@@ -29,18 +29,12 @@ int main(int argc, char** argv) {
 
 		// read the label and intensity volumes
 
-		vigra::MultiArray<3, int>   labels;
-		vigra::MultiArray<3, float> intensities;
+		ExplicitVolume<float> intensities;
+		ExplicitVolume<int>   labels;
 
-		{
-			vigra::HDF5File project(
-					optionProjectFile.as<std::string>(),
-					vigra::HDF5File::OpenMode::ReadWrite);
-
-			project.cd("volume");
-			project.readAndResize("intensities", intensities);
-			project.readAndResize("labels", labels);
-		}
+		Hdf5VolumeStore volumeStore(optionProjectFile.as<std::string>());
+		volumeStore.retrieveIntensities(intensities);
+		volumeStore.retrieveLabels(labels);
 
 		// create an hdf5 tube store
 

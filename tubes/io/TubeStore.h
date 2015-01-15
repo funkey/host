@@ -5,6 +5,9 @@
 #include "Features.h"
 #include "Skeletons.h"
 
+/**
+ * Interface definition for tube stores.
+ */
 class TubeStore {
 
 public:

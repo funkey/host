@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 		Volumes volumes;
 		tubeStore.retrieveVolumes(ids, volumes);
 
-		ExplicitVolume<char>& volume = volumes[optionTubeId];
+		ExplicitVolume<unsigned char>& volume = volumes[optionTubeId];
 
 		LOG_USER(logger::out)
 				<< "read volume with bb " << volume.getBoundingBox()
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 
 		// volume -> mesh
 
-		typedef ExplicitVolumeAdaptor<ExplicitVolume<char>> Adaptor;
+		typedef ExplicitVolumeAdaptor<ExplicitVolume<unsigned char>> Adaptor;
 		Adaptor adaptor(volume);
 
 		MarchingCubes<Adaptor> marchingCubes;
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
 		// visualize
 
-		pipeline::Process<MeshView>   meshView;
+		pipeline::Process<MeshView>        meshView;
 		pipeline::Process<gui::RotateView> rotateView;
 		pipeline::Process<gui::ZoomView>   zoomView;
 		pipeline::Process<gui::Window>     window("tube viewer");

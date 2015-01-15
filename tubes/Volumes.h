@@ -4,7 +4,7 @@
 #include <imageprocessing/ExplicitVolume.h>
 #include "TubePropertyMap.h"
 
-typedef TubePropertyMap<ExplicitVolume<char>> Volumes;
+typedef TubePropertyMap<ExplicitVolume<unsigned char>> Volumes;
 
 #endif // HOST_TUBES_VOLUMES_H__
 

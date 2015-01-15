@@ -24,23 +24,24 @@ public:
 	/**
 	 * Pixel locations belonging to one edge in the skeleton graph.
 	 */
-	typedef std::vector<vigra::Shape3> Segment;
+	typedef vigra::TinyVector<float, 3> Position;
+	typedef std::vector<Position>       Segment;
 
 	/**
 	 * Node and edge property maps.
 	 */
-	typedef Graph::NodeMap<vigra::Shape3> Positions;
-	typedef Graph::EdgeMap<Segment>       Segments;
+	typedef Graph::NodeMap<Position> Positions;
+	typedef Graph::EdgeMap<Segment>  Segments;
 
 	/**
 	 * Create a skeleton description from an already skeletonized volume.
 	 */
-	Skeleton(const ExplicitVolume<char>& skeleton);
+	Skeleton(const ExplicitVolume<unsigned char>& skeleton);
 
 	/**
 	 * Create a skeleton description from an already skeletonized volume.
 	 */
-	Skeleton(ExplicitVolume<char>&& skeleton);
+	Skeleton(ExplicitVolume<unsigned char>&& skeleton);
 
 	/**
 	 * Move constructor.
@@ -85,27 +86,27 @@ private:
 	void copyGraph(const Skeleton& other);
 	void deleteGraph();
 
-	void createFromVolume(ExplicitVolume<char>& skeleton);
+	void createFromVolume(ExplicitVolume<unsigned char>& skeleton);
 
-	vigra::Shape3 findFirstNode(ExplicitVolume<char>& skeleton);
+	vigra::Shape3 findFirstNode(ExplicitVolume<unsigned char>& skeleton);
 
-	int numNeighbors(const vigra::Shape3& pos, ExplicitVolume<char>& skeleton);
+	int numNeighbors(const vigra::Shape3& pos, ExplicitVolume<unsigned char>& skeleton);
 
-	void traverse(vigra::Shape3 pos, ExplicitVolume<char>& skeleton, ExplicitVolume<bool>& visited);
+	void traverse(vigra::Shape3 pos, ExplicitVolume<unsigned char>& skeleton, ExplicitVolume<bool>& visited);
 
-	void openNode(vigra::Shape3 pos);
+	void openNode(Position pos);
 
-	void extendEdge(vigra::Shape3 pos);
+	void extendEdge(Position pos);
 
-	void closeNode(vigra::Shape3 pos);
+	void closeNode(Position pos);
 
 	Graph* _graph;
 
 	Positions* _positions;
 	Segments*  _segments;
 
-	std::stack<Node>           _currentPath;
-	std::vector<vigra::Shape3> _currentSegment;
+	std::stack<Node>      _currentPath;
+	std::vector<Position> _currentSegment;
 };
 
 #endif // HOST_TUBES_SKELETON_H__

@@ -17,15 +17,15 @@ public:
 	 * efficient then calling extractFrom() for a set of volumes.
 	 */
 	void extractFrom(
-			vigra::MultiArrayView<3, float> intensities,
-			vigra::MultiArrayView<3, int>   labels);
+			const ExplicitVolume<float>& intensities,
+			const ExplicitVolume<int>&   labels);
 
 	/**
 	 * Extract features for a set of tubes given as individual volumes.
 	 */
 	void extractFrom(
-			vigra::MultiArrayView<3, float> intensities,
-			const Volumes&                  volumes);
+			const ExplicitVolume<float>& intensities,
+			const Volumes&               volumes);
 
 private:
 
