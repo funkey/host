@@ -1,6 +1,11 @@
 #include <util/assert.h>
 #include "Skeleton.h"
 
+Skeleton::Skeleton() {
+
+	createGraph();
+}
+
 Skeleton::Skeleton(const ExplicitVolume<unsigned char>& skeleton) {
 
 	createGraph();
@@ -98,7 +103,7 @@ Skeleton::findFirstNode(ExplicitVolume<unsigned char>& skeleton) {
 			return i;
 
 	UTIL_THROW_EXCEPTION(
-			UsageError,
+			InvalidSkeleton,
 			"skeleton image does not contain a valid starting point");
 }
 

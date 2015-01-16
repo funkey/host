@@ -63,38 +63,14 @@ Hdf5TubeStore::saveSkeletons(const Skeletons& skeletons) {
 		const Skeleton& skeleton = p.second;
 		std::string     name     = boost::lexical_cast<std::string>(id);
 
-		std::vector<int>           nodes;
-		std::vector<vigra::Shape3> positions;
-		std::vector<int>           edges; // stored in pairs
-
-		for (Skeleton::Graph::NodeIt node(skeleton.graph()); node != lemon::INVALID; ++node) {
-
-			nodes.push_back(skeleton.graph().id(node));
-			positions.push_back(skeleton.positions()[node]);
-		}
-
-		for (Skeleton::Graph::EdgeIt edge(skeleton.graph()); edge != lemon::INVALID; ++edge) {
-
-			edges.push_back(skeleton.graph().id(skeleton.graph().u(edge)));
-			edges.push_back(skeleton.graph().id(skeleton.graph().v(edge)));
-		}
-
 		_hdfFile.cd_mk(name);
 
-		_hdfFile.write(
-				"nodes",
-				vigra::ArrayVectorView<int>(nodes.size(), &nodes[0]));
-		_hdfFile.write(
-				"positions",
-				vigra::ArrayVectorView<vigra::Shape3::value_type>(positions.size()*3, &positions[0][0]));
+		PositionConverter positionConverter;
 
-		if (edges.size() > 0) {
-
-			_hdfFile.write(
-					"edges",
-					vigra::ArrayVectorView<int>(edges.size(), &edges[0]));
-			// TODO: segments
-		}
+		writeGraph(skeleton.graph());
+		writeNodeMap(skeleton.graph(), skeleton.positions(), "positions", positionConverter);
+		// TODO:
+		//writeEdgeMap(skeleton.segments(), "segments");
 
 		_hdfFile.cd_up();
 	}
@@ -135,6 +111,26 @@ Hdf5TubeStore::retrieveFeatures(const TubeIds&, Features&) {
 }
 
 void
-Hdf5TubeStore::retrieveSkeletons(const TubeIds&, Skeletons&) {
+Hdf5TubeStore::retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) {
 
+	_hdfFile.cd("tubes/skeletons");
+
+	for (TubeId id : ids) {
+
+		std::string name = boost::lexical_cast<std::string>(id);
+
+		_hdfFile.cd(name);
+
+		Skeleton          skeleton;
+		PositionConverter positionConverter;
+
+		readGraph(skeleton.graph());
+		readNodeMap(skeleton.graph(), skeleton.positions(), "positions", positionConverter);
+		// TODO:
+		//writeEdgeMap(skeleton.segments(), "segments");
+
+		skeletons[id] = std::move(skeleton);
+
+		_hdfFile.cd_up();
+	}
 }

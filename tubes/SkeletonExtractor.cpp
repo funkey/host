@@ -2,9 +2,16 @@
 #include <vigra/multi_resize.hxx>
 #include <vigra/functorexpression.hxx>
 #include <util/Logger.h>
+#include <util/ProgramOptions.h>
 #include "SkeletonExtractor.h"
 
 logger::LogChannel skeletonextractorlog("skeletonextractorlog", "[SkeletonExtractor] ");
+
+util::ProgramOption optionIgnoreInvalidSkeletons(
+		util::_module           = "tubes",
+		util::_long_name        = "ignoreInvalidSkeletons",
+		util::_description_text = "Ignore empty or ring-shaped skeletons.",
+		util::_default_value    = true);
 
 void
 SkeletonExtractor::extract() {
@@ -21,7 +28,8 @@ SkeletonExtractor::extract() {
 		LOG_DEBUG(skeletonextractorlog)
 				<< "processing tube " << id << std::endl;
 
-		if (id == 149) {
+		TubeId debugid = 82;
+		if (id == debugid) {
 
 			vigra::MultiArray<3, float> tmp = volumes[id].data();
 			vigra::exportVolume(
@@ -32,7 +40,7 @@ SkeletonExtractor::extract() {
 		// skeletonize an isotropic version of the tube volume
 		ExplicitVolume<unsigned char> skeletonized = makeIsotropic(volumes[id]);
 
-		if (id == 149) {
+		if (id == debugid) {
 
 			vigra::MultiArray<3, float> tmp = skeletonized.data();
 			vigra::exportVolume(
@@ -42,7 +50,7 @@ SkeletonExtractor::extract() {
 
 		_skeletonize.skeletonize(skeletonized.data());
 
-		if (id == 149) {
+		if (id == debugid) {
 
 			vigra::MultiArray<3, float> tmp = skeletonized.data();
 			vigra::exportVolume(
@@ -56,9 +64,20 @@ SkeletonExtractor::extract() {
 
 			skeletons.insert(id, Skeleton(std::move(skeletonized)));
 
-		} catch (Exception& e) {
+		} catch (InvalidSkeleton& e) {
 
-			UTIL_RETHROW(e, " (tube id = " << id << ")");
+			if (optionIgnoreInvalidSkeletons) {
+
+				LOG_ERROR(skeletonextractorlog)
+						<< "tube " << id << " does not have a valid skeleton" << std::endl;
+
+				// use an empty skeleton
+				skeletons.insert(id, Skeleton());
+
+			} else {
+
+				UTIL_RETHROW(e, " (tube id = " << id << ")");
+			}
 		}
 	}
 

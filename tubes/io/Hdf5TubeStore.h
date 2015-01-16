@@ -4,15 +4,24 @@
 #include <vigra/hdf5impex.hxx>
 #include <volumes/io/Hdf5VolumeReader.h>
 #include <volumes/io/Hdf5VolumeWriter.h>
+#include <tubes/io/Hdf5GraphWriter.h>
+#include <tubes/io/Hdf5GraphReader.h>
 #include "TubeStore.h"
 
-class Hdf5TubeStore : public TubeStore, public Hdf5VolumeReader, public Hdf5VolumeWriter {
+class Hdf5TubeStore :
+		public TubeStore,
+		public Hdf5VolumeReader,
+		public Hdf5VolumeWriter,
+		public Hdf5GraphReader,
+		public Hdf5GraphWriter {
 
 public:
 
 	Hdf5TubeStore(std::string projectFile) :
 		Hdf5VolumeReader(_hdfFile),
 		Hdf5VolumeWriter(_hdfFile),
+		Hdf5GraphReader(_hdfFile),
+		Hdf5GraphWriter(_hdfFile),
 		_hdfFile(
 				projectFile,
 				vigra::HDF5File::OpenMode::ReadWrite) {}
@@ -62,6 +71,33 @@ public:
 	void retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) override;
 
 private:
+
+	/**
+	 * Converts Position objects into array-like objects for HDF5 storage.
+	 */
+	struct PositionConverter {
+
+		typedef float    ArrayValueType;
+		static const int ArraySize = 3;
+
+		vigra::ArrayVectorView<float> operator()(const Skeleton::Position& pos) const {
+
+			vigra::ArrayVector<float> array(3);
+			for (int i = 0; i < 3; i++)
+				array[i] = pos[i];
+			return array;
+		}
+
+		Skeleton::Position operator()(const vigra::ArrayVectorView<float>& array) const {
+
+			Skeleton::Position pos;
+			for (int i = 0; i < 3; i++)
+				pos[i] = array[i];
+
+			return pos;
+		}
+
+	};
 
 	vigra::HDF5File _hdfFile;
 };

@@ -7,6 +7,11 @@
 #include <imageprocessing/ExplicitVolume.h>
 
 /**
+ * Exception for strange skeletons.
+ */
+class InvalidSkeleton : public Exception {};
+
+/**
  * Represents a skeleton as a graph of terminal nodes and branch points.
  */
 class Skeleton : public Volume {
@@ -32,6 +37,11 @@ public:
 	 */
 	typedef Graph::NodeMap<Position> Positions;
 	typedef Graph::EdgeMap<Segment>  Segments;
+
+	/**
+	 * Create an empty skeleton.
+	 */
+	Skeleton();
 
 	/**
 	 * Create a skeleton description from an already skeletonized volume.
