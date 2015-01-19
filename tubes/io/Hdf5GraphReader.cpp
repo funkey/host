@@ -26,7 +26,7 @@ Hdf5GraphReader::readGraph(Graph& graph) {
 		UTIL_ASSERT_REL(graph.id(node), ==, i);
 	}
 
-	for (unsigned int i = 0; i < edges.size(); i++) {
+	for (unsigned int i = 0; i < edges.size(); i += 2) {
 
 		Graph::Node u = graph.nodeFromId(edges[i]);
 		Graph::Node v = graph.nodeFromId(edges[i+1]);
