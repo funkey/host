@@ -90,6 +90,10 @@ public:
 	Segments& segements() { return *_segments; }
 	const Segments& segements() const { return *_segments; }
 
+protected:
+
+	BoundingBox computeBoundingBox() const override;
+
 private:
 
 	void createGraph();
