@@ -113,7 +113,7 @@ Hdf5TubeStore::retrieveFeatures(const TubeIds&, Features&) {
 void
 Hdf5TubeStore::retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) {
 
-	_hdfFile.cd("tubes/skeletons");
+	_hdfFile.cd("/tubes/skeletons");
 
 	for (TubeId id : ids) {
 
