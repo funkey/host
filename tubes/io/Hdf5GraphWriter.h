@@ -50,7 +50,6 @@ public:
 			const Converter&          converter) {
 
 		typedef vigra::ArrayVector<typename Converter::ArrayValueType>     ArrayType;
-		typedef vigra::ArrayVectorView<typename Converter::ArrayValueType> ArrayViewType;
 
 		int numNodes = 0;
 		for (Graph::NodeIt node(graph); node != lemon::INVALID; ++node)
@@ -64,7 +63,9 @@ public:
 
 			for (Graph::NodeIt node(graph); node != lemon::INVALID; ++node) {
 
-				ArrayViewType v = converter(map[node]);
+				std::cout << "storing " << map[node] << " ";
+				ArrayType v = converter(map[node]);
+				std::cout << "as " << v << std::endl;
 				std::copy(v.begin(), v.end(), values.begin() + Converter::ArraySize*nodeMap[graph.id(node)]);
 			}
 
@@ -72,7 +73,7 @@ public:
 
 			for (Graph::NodeIt node(graph); node != lemon::INVALID; ++node) {
 
-				ArrayViewType v = converter(map[node]);
+				ArrayType v = converter(map[node]);
 				std::copy(v.begin(), v.end(), values.begin() + Converter::ArraySize*graph.id(node));
 			}
 		}

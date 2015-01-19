@@ -80,7 +80,7 @@ private:
 		typedef float    ArrayValueType;
 		static const int ArraySize = 3;
 
-		vigra::ArrayVectorView<float> operator()(const Skeleton::Position& pos) const {
+		vigra::ArrayVector<float> operator()(const Skeleton::Position& pos) const {
 
 			vigra::ArrayVector<float> array(3);
 			for (int i = 0; i < 3; i++)
