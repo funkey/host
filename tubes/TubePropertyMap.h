@@ -36,6 +36,8 @@ public:
 	 */
 	void clear() { _map.clear(); }
 
+	std::size_t size() const { return _map.size(); }
+
 private:
 
 	map_type _map;
