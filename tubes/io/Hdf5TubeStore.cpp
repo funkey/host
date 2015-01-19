@@ -129,7 +129,7 @@ Hdf5TubeStore::retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) {
 		// TODO:
 		//writeEdgeMap(skeleton.segments(), "segments");
 
-		skeletons[id] = std::move(skeleton);
+		skeletons.insert(id, std::move(skeleton));
 
 		_hdfFile.cd_up();
 	}
