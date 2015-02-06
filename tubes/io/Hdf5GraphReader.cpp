@@ -15,6 +15,9 @@ Hdf5GraphReader::readGraph(Graph& graph) {
 			nodes);
 	int numNodes = nodes[0];
 
+	if (numNodes == 0)
+		return;
+
 	if (_hdfFile.existsDataset("edges"))
 		_hdfFile.readAndResize(
 				"edges",

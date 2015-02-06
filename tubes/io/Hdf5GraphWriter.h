@@ -63,9 +63,7 @@ public:
 
 			for (Graph::NodeIt node(graph); node != lemon::INVALID; ++node) {
 
-				std::cout << "storing " << map[node] << " ";
 				ArrayType v = converter(map[node]);
-				std::cout << "as " << v << std::endl;
 				std::copy(v.begin(), v.end(), values.begin() + Converter::ArraySize*nodeMap[graph.id(node)]);
 			}
 

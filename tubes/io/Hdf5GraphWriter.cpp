@@ -13,9 +13,6 @@ Hdf5GraphWriter::writeGraph(const Hdf5GraphWriter::Graph& graph) {
 	n[0] = numNodes;
 	_hdfFile.write("num_nodes", n);
 
-	if (numNodes == 0)
-		return;
-
 	if (!nodeIdsConsequtive(graph)) {
 
 		// create map from node ids to consecutive ids
@@ -36,8 +33,7 @@ Hdf5GraphWriter::writeGraph(const Hdf5GraphWriter::Graph& graph) {
 		}
 	}
 
-	if (edges.size() > 0)
-		_hdfFile.write("edges", edges);
+	_hdfFile.write("edges", edges);
 }
 
 bool

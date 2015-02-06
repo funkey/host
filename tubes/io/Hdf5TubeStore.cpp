@@ -117,6 +117,8 @@ Hdf5TubeStore::retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) {
 
 	for (TubeId id : ids) {
 
+		LOG_ALL(hdf5storelog) << "reading skeleton for tube " << id << std::endl;
+
 		std::string name = boost::lexical_cast<std::string>(id);
 
 		_hdfFile.cd(name);
