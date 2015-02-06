@@ -57,6 +57,37 @@ private:
 
 };
 
+class Controller :
+		public sg::Agent<
+				Controller,
+				sg::Accepts<
+						KeyDown
+				>,
+				sg::Provides<
+						ChangeAlpha
+				>
+		> {
+
+public:
+
+	Controller() :
+		_alpha(1.0) {}
+
+	void onSignal(KeyDown& signal) {
+
+		if (signal.key == sg_gui::keys::Tab) {
+
+			_alpha += 0.5;
+			if (_alpha > 1.0)
+				_alpha = 0;
+
+			send<ChangeAlpha>(_alpha);
+		}
+	}
+
+	double _alpha;
+};
+
 int main(int argc, char** argv) {
 
 	try {
@@ -125,6 +156,7 @@ int main(int argc, char** argv) {
 
 		// visualize
 
+		auto controller   = std::make_shared<Controller>();
 		auto skeletonView = std::make_shared<SkeletonView>();
 		auto meshView     = std::make_shared<MeshView>();
 		auto rotateView   = std::make_shared<RotateView>();
@@ -134,8 +166,11 @@ int main(int argc, char** argv) {
 		window->add(zoomView);
 		zoomView->add(rotateView);
 		rotateView->add(meshView);
-		//rotateView->add(skeletonView);
+		rotateView->add(skeletonView);
+		rotateView->add(controller);
+
 		meshView->setMeshes(meshes);
+		skeletonView->setSkeletons(skeletons);
 
 		window->processEvents();
 

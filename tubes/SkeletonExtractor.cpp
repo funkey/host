@@ -1,9 +1,11 @@
-#include <vigra/multi_impex.hxx>
-#include <vigra/multi_resize.hxx>
-#include <vigra/functorexpression.hxx>
 #include <util/Logger.h>
 #include <util/ProgramOptions.h>
 #include "SkeletonExtractor.h"
+#define WITH_LEMON
+#include <vigra/multi_impex.hxx>
+#include <vigra/multi_resize.hxx>
+#include <vigra/multi_watersheds.hxx>
+#include <vigra/functorexpression.hxx>
 
 logger::LogChannel skeletonextractorlog("skeletonextractorlog", "[SkeletonExtractor] ");
 
@@ -17,6 +19,8 @@ void
 SkeletonExtractor::extract() {
 
 	TubeIds ids = _store->getTubeIds();
+	//TubeIds ids;
+	//ids.add(331);
 
 	Volumes volumes;
 	_store->retrieveVolumes(ids, volumes);
@@ -28,37 +32,10 @@ SkeletonExtractor::extract() {
 		LOG_DEBUG(skeletonextractorlog)
 				<< "processing tube " << id << std::endl;
 
-		TubeId debugid = 82;
-		if (id == debugid) {
-
-			vigra::MultiArray<3, float> tmp = volumes[id].data();
-			vigra::exportVolume(
-					tmp,
-					vigra::VolumeExportInfo("debug/tube", ".png"));
-		}
-
 		// skeletonize an isotropic version of the tube volume
 		ExplicitVolume<unsigned char> skeletonized = makeIsotropic(volumes[id]);
 
-		if (id == debugid) {
-
-			vigra::MultiArray<3, float> tmp = skeletonized.data();
-			vigra::exportVolume(
-					tmp,
-					vigra::VolumeExportInfo("debug/pre_skeleton", ".png"));
-		}
-
 		_skeletonize.skeletonize(skeletonized.data());
-
-		if (id == debugid) {
-
-			vigra::MultiArray<3, float> tmp = skeletonized.data();
-			vigra::exportVolume(
-					tmp,
-					vigra::VolumeExportInfo("debug/skeleton", ".png"));
-
-			//break;
-		}
 
 		try {
 
@@ -133,3 +110,4 @@ SkeletonExtractor::makeIsotropic(const ExplicitVolume<unsigned char>& volume) {
 
 	return isotropic;
 }
+
