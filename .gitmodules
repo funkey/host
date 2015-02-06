@@ -19,3 +19,12 @@
 [submodule "modules/gui"]
 	path = modules/gui
 	url = https://github.com/funkey/gui
+[submodule "modules/cohear"]
+	path = modules/cohear
+	url = http://github.com/funkey/cohear
+[submodule "modules/scopegraph"]
+	path = modules/scopegraph
+	url = http://github.com/funkey/scopegraph
+[submodule "modules/sg_gui"]
+	path = modules/sg_gui
+	url = http://github.com/funkey/sg_gui

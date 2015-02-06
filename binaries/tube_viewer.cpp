@@ -3,19 +3,17 @@
  */
 
 #include <util/ProgramOptions.h>
-#include <pipeline/Process.h>
-#include <pipeline/Value.h>
 #include <imageprocessing/ExplicitVolume.h>
 #include <tubes/gui/SkeletonView.h>
 #include <tubes/io/Hdf5TubeStore.h>
-#include <gui/ContainerView.h>
-#include <gui/MarchingCubes.h>
-#include <gui/Mesh.h>
-#include <gui/MeshView.h>
-#include <gui/OverlayPlacing.h>
-#include <gui/RotateView.h>
-#include <gui/ZoomView.h>
-#include <gui/Window.h>
+#include <sg_gui/MarchingCubes.h>
+#include <sg_gui/Mesh.h>
+#include <sg_gui/MeshView.h>
+#include <sg_gui/RotateView.h>
+#include <sg_gui/ZoomView.h>
+#include <sg_gui/Window.h>
+
+using namespace sg_gui;
 
 util::ProgramOption optionProjectFile(
 		util::_long_name        = "projectFile",
@@ -101,12 +99,12 @@ int main(int argc, char** argv) {
 
 		// get skeletons
 
-		pipeline::Value<Skeletons> skeletons;
+		auto skeletons = std::make_shared<Skeletons>();
 		tubeStore.retrieveSkeletons(ids, *skeletons);
 
 		// volumes -> meshes
 
-		pipeline::Value<Meshes> meshes;
+		auto meshes = std::make_shared<Meshes>();
 		for (auto& p : volumes) {
 
 			TubeId id                             = p.first;
@@ -127,20 +125,17 @@ int main(int argc, char** argv) {
 
 		// visualize
 
-		pipeline::Process<SkeletonView>                            skeletonView;
-		pipeline::Process<MeshView>                                meshView;
-		pipeline::Process<gui::ContainerView<gui::OverlayPlacing>> overlay;
-		pipeline::Process<gui::RotateView>                         rotateView;
-		pipeline::Process<gui::ZoomView>                           zoomView;
-		pipeline::Process<gui::Window>                             window("tube viewer");
+		auto skeletonView = std::make_shared<SkeletonView>();
+		auto meshView     = std::make_shared<MeshView>();
+		auto rotateView   = std::make_shared<RotateView>();
+		auto zoomView     = std::make_shared<ZoomView>();
+		auto window       = std::make_shared<sg_gui::Window>("tube viewer");
 
-		meshView->setInput(meshes);
-		skeletonView->setInput(skeletons);
-		overlay->addInput(meshView->getOutput());
-		overlay->addInput(skeletonView->getOutput());
-		rotateView->setInput(overlay->getOutput());
-		zoomView->setInput(rotateView->getOutput());
-		window->setInput(zoomView->getOutput());
+		window->add(zoomView);
+		zoomView->add(rotateView);
+		rotateView->add(meshView);
+		//rotateView->add(skeletonView);
+		meshView->setMeshes(meshes);
 
 		window->processEvents();
 

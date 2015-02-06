@@ -1,1 +1,1 @@
-define_module(tubes OBJECT LINKS util imageprocessing gui volumes region_features lemon-hg)
+define_module(tubes OBJECT LINKS util imageprocessing sg_gui volumes region_features lemon-hg)
