@@ -5,6 +5,7 @@
 #include <util/ProgramOptions.h>
 #include <imageprocessing/ExplicitVolume.h>
 #include <tubes/gui/SkeletonView.h>
+#include <tubes/gui/NormalsView.h>
 #include <tubes/io/Hdf5TubeStore.h>
 #include <sg_gui/MarchingCubes.h>
 #include <sg_gui/Mesh.h>
@@ -158,19 +159,22 @@ int main(int argc, char** argv) {
 
 		auto controller   = std::make_shared<Controller>();
 		auto skeletonView = std::make_shared<SkeletonView>();
+		auto normalsView  = std::make_shared<NormalsView>();
 		auto meshView     = std::make_shared<MeshView>();
 		auto rotateView   = std::make_shared<RotateView>();
-		auto zoomView     = std::make_shared<ZoomView>();
+		auto zoomView     = std::make_shared<ZoomView>(true);
 		auto window       = std::make_shared<sg_gui::Window>("tube viewer");
 
 		window->add(zoomView);
 		zoomView->add(rotateView);
 		rotateView->add(meshView);
 		rotateView->add(skeletonView);
+		rotateView->add(normalsView);
 		rotateView->add(controller);
 
 		meshView->setMeshes(meshes);
 		skeletonView->setSkeletons(skeletons);
+		normalsView->setMeshes(meshes);
 
 		window->processEvents();
 
