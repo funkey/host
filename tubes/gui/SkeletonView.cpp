@@ -83,12 +83,58 @@ SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 
 	for (Skeleton::Graph::EdgeIt e(skeleton.graph()); e != lemon::INVALID; ++e) {
 
-		const Skeleton::Position& u = skeleton.positions()[skeleton.graph().u(e)];
-		const Skeleton::Position& v = skeleton.positions()[skeleton.graph().v(e)];
+		Skeleton::Position prev;
+		bool first = true;
 
-		glBegin(GL_LINES);
-		glVertex3d(u[0], u[1], u[2]);
-		glVertex3d(v[0], v[1], v[2]);
-		glEnd();
+		for (const Skeleton::Position& p : skeleton.segments()[e]) {
+
+			if (first) {
+
+				first = false;
+
+			} else {
+
+				glBegin(GL_LINES);
+				glVertex3d(prev[0], prev[1], prev[2]);
+				glVertex3d(p[0], p[1], p[2]);
+				glEnd();
+			}
+
+			prev  = p;
+
+			glBegin(GL_QUADS);
+
+			glVertex3d(p[0]-5, p[1]-5, p[2]+5);
+			glVertex3d(p[0]+5, p[1]-5, p[2]+5);
+			glVertex3d(p[0]+5, p[1]+5, p[2]+5);
+			glVertex3d(p[0]-5, p[1]+5, p[2]+5);
+
+			glVertex3d(p[0]-5, p[1]-5, p[2]-5);
+			glVertex3d(p[0]+5, p[1]-5, p[2]-5);
+			glVertex3d(p[0]+5, p[1]+5, p[2]-5);
+			glVertex3d(p[0]-5, p[1]+5, p[2]-5);
+
+			glVertex3d(p[0]-5, p[1]+5, p[2]-5);
+			glVertex3d(p[0]+5, p[1]+5, p[2]-5);
+			glVertex3d(p[0]+5, p[1]+5, p[2]+5);
+			glVertex3d(p[0]-5, p[1]+5, p[2]+5);
+
+			glVertex3d(p[0]-5, p[1]-5, p[2]-5);
+			glVertex3d(p[0]+5, p[1]-5, p[2]-5);
+			glVertex3d(p[0]+5, p[1]-5, p[2]+5);
+			glVertex3d(p[0]-5, p[1]-5, p[2]+5);
+
+			glVertex3d(p[0]+5 ,p[1]-5, p[2]-5);
+			glVertex3d(p[0]+5 ,p[1]+5, p[2]-5);
+			glVertex3d(p[0]+5 ,p[1]+5, p[2]+5);
+			glVertex3d(p[0]+5 ,p[1]-5, p[2]+5);
+
+			glVertex3d(p[0]-5 ,p[1]-5, p[2]-5);
+			glVertex3d(p[0]-5 ,p[1]+5, p[2]-5);
+			glVertex3d(p[0]-5 ,p[1]+5, p[2]+5);
+			glVertex3d(p[0]-5 ,p[1]-5, p[2]+5);
+
+			glEnd();
+		}
 	}
 }
