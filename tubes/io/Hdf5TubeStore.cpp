@@ -69,8 +69,7 @@ Hdf5TubeStore::saveSkeletons(const Skeletons& skeletons) {
 
 		writeGraph(skeleton.graph());
 		writeNodeMap(skeleton.graph(), skeleton.positions(), "positions", positionConverter);
-		// TODO:
-		//writeEdgeMap(skeleton.segments(), "segments");
+		writeVarLengthEdgeMap(skeleton.graph(), skeleton.segments(), "segments", positionConverter);
 
 		_hdfFile.cd_up();
 	}
@@ -128,8 +127,7 @@ Hdf5TubeStore::retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) {
 
 		readGraph(skeleton.graph());
 		readNodeMap(skeleton.graph(), skeleton.positions(), "positions", positionConverter);
-		// TODO:
-		//writeEdgeMap(skeleton.segments(), "segments");
+		readVarLengthEdgeMap(skeleton.graph(), skeleton.segments(), "segments", positionConverter);
 
 		skeletons.insert(id, std::move(skeleton));
 
