@@ -176,7 +176,7 @@ Skeleton::traverse(vigra::Shape3 pos, ExplicitVolume<unsigned char>& skeleton, E
 	}
 
 	if (isNode)
-		closeNode(realPos);
+		closeNode();
 }
 
 void
@@ -204,7 +204,7 @@ Skeleton::extendEdge(Position pos) {
 }
 
 void
-Skeleton::closeNode(Position) {
+Skeleton::closeNode() {
 
 	_currentPath.pop();
 }

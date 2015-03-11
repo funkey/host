@@ -20,6 +20,11 @@ util::ProgramOption optionProjectFile(
 		util::_description_text = "The project file to read the label volume and store the tubes.",
 		util::_default_value    = "project.hdf");
 
+util::ProgramOption optionTubeId(
+		util::_long_name        = "id",
+		util::_short_name       = "i",
+		util::_description_text = "The ids of the tubes to extract (separated by a single non-decimal character). If not given, all tubes are extracted.");
+
 int main(int argc, char** argv) {
 
 	try {
@@ -36,7 +41,30 @@ int main(int argc, char** argv) {
 
 		Hdf5TubeStore store(optionProjectFile.as<std::string>());
 		TubeExtractor extractor(&store);
-		extractor.extractFrom(labels);
+
+		if (!optionTubeId) {
+
+			extractor.extractFrom(labels);
+
+		} else {
+
+			std::set<TubeId> ids;
+			std::stringstream ss(optionTubeId.as<std::string>());
+
+			while (ss.good()) {
+
+				TubeId id;
+				ss >> id;
+				ids.insert(id);
+
+				char sep;
+				if (ss.good())
+					ss >> sep;
+			}
+
+			extractor.extractFrom(labels, ids);
+		}
+
 
 	} catch (boost::exception& e) {
 

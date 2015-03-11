@@ -87,8 +87,24 @@ public:
 	 * Get the edge property map that stores a list of positions for each 
 	 * skeleton edge.
 	 */
-	Segments& segements() { return *_segments; }
-	const Segments& segements() const { return *_segments; }
+	Segments& segments() { return *_segments; }
+	const Segments& segments() const { return *_segments; }
+
+	/**
+	 * Start a new node in the skeleton at the given position.
+	 */
+	void openNode(Position pos);
+
+	/**
+	 * Extend the edge of the currently open node by one position.
+	 */
+	void extendEdge(Position pos);
+
+	/**
+	 * Close the currently open node, backtrack to the previous node in the 
+	 * tree.
+	 */
+	void closeNode();
 
 protected:
 
@@ -107,12 +123,6 @@ private:
 	int numNeighbors(const vigra::Shape3& pos, ExplicitVolume<unsigned char>& skeleton);
 
 	void traverse(vigra::Shape3 pos, ExplicitVolume<unsigned char>& skeleton, ExplicitVolume<bool>& visited);
-
-	void openNode(Position pos);
-
-	void extendEdge(Position pos);
-
-	void closeNode(Position pos);
 
 	Graph* _graph;
 

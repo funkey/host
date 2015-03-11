@@ -19,7 +19,7 @@ public:
 	 * Extract tubes from a label image. The values of the label image are 
 	 * interpreted as tube ids.
 	 */
-	void extractFrom(ExplicitVolume<int>& labels);
+	void extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& ids = std::set<TubeId>());
 
 private:
 

@@ -2,7 +2,7 @@
 #include "TubeExtractor.h"
 
 void
-TubeExtractor::extractFrom(ExplicitVolume<int>& labels) {
+TubeExtractor::extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& ids) {
 
 	std::map<TubeId, BoundingBox> bbs;
 
@@ -30,6 +30,10 @@ TubeExtractor::extractFrom(ExplicitVolume<int>& labels) {
 
 		TubeId       id = p.first;
 		BoundingBox& bb = p.second;
+
+		if (!ids.empty())
+			if (!ids.count(id))
+				continue;
 
 		// set volume properties
 		volumes[id].setBoundingBox(bb*vigra::TinyVector<float, 3>(resX, resY, resZ));
