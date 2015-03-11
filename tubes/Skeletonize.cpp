@@ -1,7 +1,7 @@
 #include <limits>
 #include "Skeletonize.h"
 #include <vigra/multi_distance.hxx>
-#include <vigra/graph_algorithms.hxx>
+#include <vigra/multi_gridgraph.hxx>
 #include <util/timing.h>
 #include <util/ProgramOptions.h>
 
@@ -12,9 +12,36 @@ util::ProgramOption optionSkeletonBoundaryWeight(
 
 Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_volume(volume),
-	_grid(GridGraphType(_volume.data().shape(), vigra::IndirectNeighborhood)),
-	_edgeMap(_grid),
-	_dijkstra(_grid, _edgeMap) {}
+	_positionMap(_graph),
+	_distanceMap(_graph),
+	_dijkstra(_graph, _distanceMap) {
+
+	vigra::MultiArray<3, Graph::Node> nodeIds(_volume.data().shape());
+
+	for (int z = 0; z < _volume.depth();  z++)
+	for (int y = 0; y < _volume.height(); y++)
+	for (int x = 0; x < _volume.width();  x++) {
+
+		if (_volume(x, y, z) == 0)
+			continue;
+
+		Graph::Node node = _graph.addNode();
+		nodeIds(x, y, z) = node;
+		_positionMap[node] = Position(x, y, z);
+	}
+
+	vigra::GridGraph<3> grid(_volume.data().shape(), vigra::IndirectNeighborhood);
+	for (vigra::GridGraph<3>::EdgeIt edge(grid); edge != lemon::INVALID; ++edge) {
+
+		if (_volume[grid.u(edge)] == 0 || _volume[grid.v(edge)] == 0)
+			continue;
+
+		Graph::Node u = nodeIds[grid.u(edge)];
+		Graph::Node v = nodeIds[grid.v(edge)];
+
+		_graph.addEdge(u, v);
+	}
+}
 
 Skeleton
 Skeletonize::getSkeleton() {
@@ -23,7 +50,7 @@ Skeletonize::getSkeleton() {
 
 	initializeEdgeMap();
 
-	GridGraphType::Node root = findRoot();
+	Graph::Node root = findRoot();
 
 	setRoot(root);
 
@@ -65,12 +92,13 @@ Skeletonize::initializeEdgeMap() {
 
 	// find center point with maximal boundary distance
 	float maxBoundaryDistance2 = 0;
-	for (GridGraphType::NodeIt node(_grid); node != lemon::INVALID; ++node) {
+	for (Graph::NodeIt node(_graph); node != lemon::INVALID; ++node) {
 
-		if (boundaryDistance[*node] > maxBoundaryDistance2) {
+		const Position& pos = _positionMap[node];
+		if (boundaryDistance[pos] > maxBoundaryDistance2) {
 
-			_center = *node;
-			maxBoundaryDistance2 = boundaryDistance[*node];
+			_center = node;
+			maxBoundaryDistance2 = boundaryDistance[pos];
 		}
 	}
 
@@ -87,10 +115,10 @@ Skeletonize::initializeEdgeMap() {
 			Param(boundaryWeight)*pow(Param(1.0) - sqrt(Arg1()/Param(maxBoundaryDistance2)), Param(16)));
 
 	// create initial edge map from boundary penalty
-	vigra::edgeWeightsFromNodeWeights(
-			_grid,
-			boundaryDistance,
-			_edgeMap);
+	for (Graph::EdgeIt e(_graph); e != lemon::INVALID; ++e)
+		_distanceMap[e] = 0.5*(
+				boundaryDistance[_positionMap[_graph.u(e)]] +
+				boundaryDistance[_positionMap[_graph.v(e)]]);
 
 	// multiply with Euclidean node distances
 	//
@@ -112,55 +140,38 @@ Skeletonize::initializeEdgeMap() {
 	nodeDistances[6] = sqrt(pow(_volume.getResolutionX(), 2) + pow(_volume.getResolutionY(), 2));
 	nodeDistances[7] = sqrt(pow(_volume.getResolutionX(), 2) + pow(_volume.getResolutionY(), 2) + pow(_volume.getResolutionZ(), 2));
 
-	// length of diagonal in grid coordinates in volume
-	float maxDiameter =
-			sqrt(
-					pow(_volume.getResolutionX(), 2) +
-					pow(_volume.getResolutionY(), 2) +
-					pow(_volume.getResolutionZ(), 2));
+	for (Graph::EdgeIt e(_graph); e != lemon::INVALID; ++e) {
 
-	for (GridGraphType::EdgeIt e(_grid); e != lemon::INVALID; e++) {
-
-		GridGraphType::Node u = _grid.u(e);
-		GridGraphType::Node v = _grid.v(e);
-
-		// edges outside the volume
-		if (_volume[u] == 0 || _volume[v] == 0) {
-
-			// more expensive than longest possible path inside volume
-			_edgeMap[e] =
-					maxDiameter*                           /* >= length of longest straight path */
-					nodeDistances[7]*(boundaryWeight + 1); /* >= max edge value */
-			continue;
-		}
+		Position u = _positionMap[_graph.u(e)];
+		Position v = _positionMap[_graph.v(e)];
 
 		int i = 0;
 		if (u[0] != v[0]) i |= 4;
 		if (u[1] != v[1]) i |= 2;
 		if (u[2] != v[2]) i |= 1;
 
-		_edgeMap[e] = nodeDistances[i]*(_edgeMap[e] + 1);
+		_distanceMap[e] = nodeDistances[i]*(_distanceMap[e] + 1);
 	}
 }
 
-Skeletonize::GridGraphType::Node
+Skeletonize::Graph::Node
 Skeletonize::findRoot() {
 
 	Timer t(__FUNCTION__);
 
 	_dijkstra.run(_center);
 
-	GridGraphType::Node root;
+	Graph::Node root;
 	float maxValue = 0;
-	for (GridGraphType::NodeIt n(_grid); n != lemon::INVALID; n++)
-		if (_volume[n] != 0 && _dijkstra.distMap()[n] > maxValue) {
+	for (Graph::NodeIt n(_graph); n != lemon::INVALID; ++n)
+		if (_dijkstra.distMap()[n] > maxValue) {
 
 			root     = n;
 			maxValue = _dijkstra.distMap()[n];
 		}
 
 	// mark root as being part of skeleton
-	_volume[root] = 2;
+	_volume[_positionMap[root]] = 2;
 
 	return root;
 }
@@ -173,35 +184,35 @@ Skeletonize::extractLongestBranch(Skeleton& skeleton) {
 	_dijkstra.run(_root);
 
 	// find furthest point
-	GridGraphType::Node furthest;
+	Graph::Node furthest;
 	float maxValue = 0;
-	for (GridGraphType::NodeIt n(_grid); n != lemon::INVALID; n++) {
-		if (_volume[n] != 0 && _dijkstra.distMap()[n] > maxValue) {
+	for (Graph::NodeIt n(_graph); n != lemon::INVALID; ++n) {
+		if (_dijkstra.distMap()[n] > maxValue) {
 
 			furthest = n;
 			maxValue = _dijkstra.distMap()[n];
 		}
 	}
 
-	skeleton.openNode(gridToVolume(furthest));
+	skeleton.openNode(gridToVolume(_positionMap[furthest]));
 
-	GridGraphType::Node n = furthest;
+	Graph::Node n = furthest;
 
 	// walk backwards to next skeleton point
-	while (_volume[n] != 2) {
+	while (_volume[_positionMap[n]] != 2) {
 
-		GridGraphType::Edge pred = _dijkstra.predMap()[n];
+		Graph::Edge pred = _dijkstra.predMap()[n];
 
-		GridGraphType::Node u = _grid.u(pred);
-		GridGraphType::Node v = _grid.v(pred);
+		Graph::Node u = _graph.u(pred);
+		Graph::Node v = _graph.v(pred);
 
 		n = (u == n ? v : u);
 
-		skeleton.extendEdge(gridToVolume(n));
-		_edgeMap[pred] = 0;
+		skeleton.extendEdge(gridToVolume(_positionMap[n]));
+		_distanceMap[pred] = 0;
 	}
 
-	skeleton.openNode(gridToVolume(_root));
+	skeleton.openNode(gridToVolume(_positionMap[_root]));
 	skeleton.closeNode();
 
 	skeleton.closeNode();

@@ -3,7 +3,6 @@
 
 #include <imageprocessing/ExplicitVolume.h>
 #define WITH_LEMON
-#include <vigra/multi_gridgraph.hxx>
 #include <lemon/dijkstra.h>
 #include "Skeleton.h"
 
@@ -11,8 +10,9 @@ class Skeletonize {
 
 	typedef vigra::MultiArray<3, unsigned char> VolumeType;
 	typedef VolumeType::difference_type         Position;
-	typedef vigra::GridGraph<3>                 GridGraphType;
-	typedef GridGraphType::EdgeMap<float>       EdgeMapType;
+	typedef lemon::ListGraph                    Graph;
+	typedef Graph::NodeMap<Position>            PositionMap;
+	typedef Graph::EdgeMap<double>              DistanceMap;
 
 public:
 
@@ -33,13 +33,13 @@ private:
 	 * Find the root node as the furthest point from the highest boundary 
 	 * distance point.
 	 */
-	GridGraphType::Node findRoot();
+	Graph::Node findRoot();
 
 	/**
 	 * Set the root node of the skeleton. This should be a point with maximal 
 	 * distance to some internal point.
 	 */
-	void setRoot(Position root) { _root = root; }
+	void setRoot(Graph::Node root) { _root = root; }
 
 	/**
 	 * Compute or update the shortest paths from the root node to all other 
@@ -77,13 +77,14 @@ private:
 	ExplicitVolume<unsigned char>& _volume;
 
 	// lemon graph compatible datastructures for Dijkstra
-	GridGraphType _grid;
-	EdgeMapType   _edgeMap;
+	Graph       _graph;
+	PositionMap _positionMap;
+	DistanceMap _distanceMap;
 
-	lemon::Dijkstra<GridGraphType, EdgeMapType> _dijkstra;
+	lemon::Dijkstra<Graph, DistanceMap> _dijkstra;
 
-	GridGraphType::Node _root;
-	GridGraphType::Node _center;
+	Graph::Node _root;
+	Graph::Node _center;
 };
 
 #endif // HOST_TUBES_SKELETONIZE_H__
