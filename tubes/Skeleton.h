@@ -116,14 +116,6 @@ private:
 	void copyGraph(const Skeleton& other);
 	void deleteGraph();
 
-	void createFromVolume(ExplicitVolume<unsigned char>& skeleton);
-
-	vigra::Shape3 findFirstNode(ExplicitVolume<unsigned char>& skeleton);
-
-	int numNeighbors(const vigra::Shape3& pos, ExplicitVolume<unsigned char>& skeleton);
-
-	void traverse(vigra::Shape3 pos, ExplicitVolume<unsigned char>& skeleton, ExplicitVolume<bool>& visited);
-
 	Graph* _graph;
 
 	Positions* _positions;

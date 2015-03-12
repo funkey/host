@@ -92,13 +92,11 @@ Skeletonize::getSkeleton() {
 
 	setRoot(root);
 
-	Skeleton skeleton;
-
 	int maxNumBranches = optionSkeletonMaxNumBranches;
 	int branchesFound = 0;
-	while (extractLongestBranch(skeleton) && ++branchesFound < maxNumBranches) {}
+	while (extractLongestBranch() && ++branchesFound < maxNumBranches) {}
 
-	return skeleton;
+	return parseVolumeSkeleton();
 }
 
 void
@@ -207,7 +205,7 @@ Skeletonize::findRoot() {
 }
 
 bool
-Skeletonize::extractLongestBranch(Skeleton& skeleton) {
+Skeletonize::extractLongestBranch() {
 
 	Timer t(__FUNCTION__);
 
@@ -232,8 +230,6 @@ Skeletonize::extractLongestBranch(Skeleton& skeleton) {
 	if (maxValue == -1)
 		return false;
 
-	skeleton.openNode(gridToVolume(_positionMap[furthest]));
-
 	Graph::Node n = furthest;
 
 	// walk backwards to next skeleton point
@@ -250,14 +246,8 @@ Skeletonize::extractLongestBranch(Skeleton& skeleton) {
 
 		n = (u == n ? v : u);
 
-		skeleton.extendEdge(gridToVolume(_positionMap[n]));
 		_distanceMap[pred] = 0.0;
 	}
-
-	skeleton.openNode(gridToVolume(_positionMap[_root]));
-	skeleton.closeNode();
-
-	skeleton.closeNode();
 
 	return true;
 }
@@ -295,3 +285,88 @@ Skeletonize::boundaryPenalty(double boundaryDistance) {
 	//   16    : magic number, taken from TEASAR paper
 	return _boundaryWeight*pow(1.0 - sqrt(boundaryDistance/_maxBoundaryDistance2), 16);
 }
+
+Skeleton
+Skeletonize::parseVolumeSkeleton() {
+
+	Skeleton skeleton;
+
+	skeleton.setBoundingBox(_volume.getBoundingBox());
+
+	traverse(_positionMap[_root], skeleton);
+
+	return skeleton;
+}
+
+void
+Skeletonize::traverse(const Position& pos, Skeleton& skeleton) {
+
+	_volume[pos] = Visited;
+
+	float x, y, z;
+	_volume.getRealLocation(pos[0], pos[1], pos[2], x, y, z);
+	Skeleton::Position realPos(x, y, z);
+
+	int neighbors = numNeighbors(pos);
+	bool isNode = (neighbors != 2);
+
+	if (isNode)
+		skeleton.openNode(realPos);
+	else
+		skeleton.extendEdge(realPos);
+
+	int sx = (pos[0] == 0 ? 0 : -1);
+	int sy = (pos[1] == 0 ? 0 : -1);
+	int sz = (pos[2] == 0 ? 0 : -1);
+	int ex = (pos[0] == _volume.width()  - 1 ? 0 : 1);
+	int ey = (pos[1] == _volume.height() - 1 ? 0 : 1);
+	int ez = (pos[2] == _volume.depth()  - 1 ? 0 : 1);
+
+	// as soon as 'neighbors' is negative, we know that there are no more 
+	// neighbors left to test (0 is not sufficient, since we count ourselves as 
+	// well)
+	for (int dz = sz; dz <= ez && neighbors >= 0; dz++)
+	for (int dy = sy; dy <= ey && neighbors >= 0; dy++)
+	for (int dx = sx; dx <= ex && neighbors >= 0; dx++) {
+
+		vigra::Shape3 p = pos + vigra::Shape3(dx, dy, dz);
+
+		if (_volume[p] >= OnSkeleton) {
+
+			neighbors--;
+
+			if (_volume[p] != Visited)
+				traverse(p, skeleton);
+		}
+	}
+
+	if (isNode)
+		skeleton.closeNode();
+}
+
+int
+Skeletonize::numNeighbors(const Position& pos) {
+
+	int num = 0;
+
+	int sx = (pos[0] == 0 ? 0 : -1);
+	int sy = (pos[1] == 0 ? 0 : -1);
+	int sz = (pos[2] == 0 ? 0 : -1);
+	int ex = (pos[0] == _volume.width()  - 1 ? 0 : 1);
+	int ey = (pos[1] == _volume.height() - 1 ? 0 : 1);
+	int ez = (pos[2] == _volume.depth()  - 1 ? 0 : 1);
+
+	for (int dz = sz; dz <= ez; dz++)
+	for (int dy = sy; dy <= ey; dy++)
+	for (int dx = sx; dx <= ex; dx++) {
+
+		if (_volume(pos[0] + dx, pos[1] + dy, pos[2] + dz) >= OnSkeleton)
+			num++;
+	}
+
+	if (_volume[pos] >= OnSkeleton)
+		num--;
+
+	return num;
+}
+

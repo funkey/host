@@ -18,8 +18,16 @@ class Skeletonize {
 
 public:
 
+	/**
+	 * Create a skeletonizer for the given volume. Inside voxels are assumed to 
+	 * be labelled with 1, background with 0.
+	 */
 	Skeletonize(ExplicitVolume<unsigned char>& volume);
 
+	/**
+	 * Extract the skeleton from the given volume. This will change the values 
+	 * of the inside voxels of the volume, see enum VoxelLabel.
+	 */
 	Skeleton getSkeleton();
 
 private:
@@ -27,10 +35,11 @@ private:
 	enum VoxelLabel {
 
 		Background = 0,
-		Inside     = 1,
-		Boundary   = 2,
-		OnSkeleton = 3,
-		Explained  = 4
+		Inside     = 1, /* ordinary inside voxels and initial values */
+		Boundary   = 2, /* inside voxels on boundary */
+		Explained  = 3, /* boundary voxels that are within a threshold distance to skeleton voxels */
+		OnSkeleton = 4, /* skeleton voxels */
+		Visited    = 5  /* skeleton voxels that have been added to Skeleton datastructure (eventually, all OnSkeleton voxels)*/
 	};
 
 	/**
@@ -68,7 +77,7 @@ private:
 	 * Returns true, if a path that is far enough from the existing skeleton was 
 	 * found.
 	 */
-	bool extractLongestBranch(Skeleton& skeleton);
+	bool extractLongestBranch();
 
 	/**
 	 * Draw a sphere around the current point, marking all boundary points 
@@ -91,6 +100,21 @@ private:
 	 * Compute the boundary penalty term.
 	 */
 	double boundaryPenalty(double boundaryDistance);
+
+	/**
+	 * Extract a Skeleton from the annotated volume.
+	 */
+	Skeleton parseVolumeSkeleton();
+
+	/**
+	 * Recursively discover the skeleton graph from the volume annotations.
+	 */
+	void traverse(const Position& pos, Skeleton& skeleton);
+
+	/**
+	 * The number of neighbors of a skeleton position in the volume.
+	 */
+	int numNeighbors(const Position& pos);
 
 	// reference to the volume to process
 	ExplicitVolume<unsigned char>& _volume;
