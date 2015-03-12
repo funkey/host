@@ -29,7 +29,8 @@ private:
 		Background = 0,
 		Inside     = 1,
 		Boundary   = 2,
-		OnSkeleton = 3
+		OnSkeleton = 3,
+		Explained  = 4
 	};
 
 	/**
@@ -70,10 +71,10 @@ private:
 	bool extractLongestBranch(Skeleton& skeleton);
 
 	/**
-	 * Find the point with the largest distance according to the last call to 
-	 * findShortestPaths().
+	 * Draw a sphere around the current point, marking all boundary points 
+	 * within it as explained.
 	 */
-	Position getFurthestPoint();
+	void drawExplanationSphere(const Position& center);
 
 	/**
 	 * Convert grid positions to volume positions.
@@ -86,13 +87,22 @@ private:
 				_volume.getBoundingBox().getMinZ() + (float)pos[2]*_volume.getResolutionZ());
 	}
 
+	/**
+	 * Compute the boundary penalty term.
+	 */
+	double boundaryPenalty(double boundaryDistance);
+
 	// reference to the volume to process
 	ExplicitVolume<unsigned char>& _volume;
+
+	vigra::MultiArray<3, float> _boundaryDistance;
 
 	// lemon graph compatible datastructures for Dijkstra
 	Graph       _graph;
 	PositionMap _positionMap;
 	DistanceMap _distanceMap;
+
+	double _boundaryWeight;
 
 	lemon::Dijkstra<Graph, DistanceMap> _dijkstra;
 
@@ -100,6 +110,11 @@ private:
 	Graph::Node _center;
 
 	std::vector<Graph::Node> _boundary;
+
+	float _maxBoundaryDistance2;
+
+	bool   _skipExplainedNodes;
+	double _explanationWeight;
 };
 
 #endif // HOST_TUBES_SKELETONIZE_H__

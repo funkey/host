@@ -13,13 +13,30 @@ util::ProgramOption optionSkeletonBoundaryWeight(
 util::ProgramOption optionSkeletonMaxNumBranches(
 		util::_long_name        = "skeletonMaxNumBranches",
 		util::_description_text = "The maximal number of branches to extract for a skeleton.",
-		util::_default_value    = 2);
+		util::_default_value    = 10);
+
+util::ProgramOption optionSkeletonSkipExplainedNodes(
+		util::_long_name        = "skeletonSkipExplainedNodes",
+		util::_description_text = "Don't add branches to nodes that are already explained by the current skeleton. "
+		                          "Nodes are explained, if they fall within a sphere around any current skeleton node. "
+		                          "The size of the sphere is determined by boundary distance * skeletonExplanationWeight.");
+
+util::ProgramOption optionSkeletonExplanationWeight(
+		util::_long_name        = "skeletonExplanationWeight",
+		util::_description_text = "A factor to multiply with the boundary distance to create 'explanation spheres'. "
+		                          "See skeletonSkipExplainedNodes.",
+		util::_default_value    = 1);
+
 
 Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_volume(volume),
+	_boundaryDistance(_volume.data().shape(), 0.0),
 	_positionMap(_graph),
 	_distanceMap(_graph),
-	_dijkstra(_graph, _distanceMap) {
+	_boundaryWeight(optionSkeletonBoundaryWeight),
+	_dijkstra(_graph, _distanceMap),
+	_skipExplainedNodes(optionSkeletonSkipExplainedNodes),
+	_explanationWeight(optionSkeletonExplanationWeight) {
 
 	vigra::MultiArray<3, Graph::Node> nodeIds(_volume.data().shape());
 	vigra::GridGraph<3> grid(_volume.data().shape(), vigra::IndirectNeighborhood);
@@ -89,11 +106,6 @@ Skeletonize::initializeEdgeMap() {
 
 	Timer t(__FUNCTION__);
 
-	const double boundaryWeight = optionSkeletonBoundaryWeight;
-
-	// perform distance transform to get boundary distance
-	vigra::MultiArray<3, float> boundaryDistance(_volume.data().shape(), 0.0);
-
 	// We assume the pitch vigra needs is the number of measurements per unit. 
 	// Our units are nm, and the volume tells us via getResolution?() the size 
 	// of a pixel. Hence, the number of measurements per nm in either direction 
@@ -105,39 +117,32 @@ Skeletonize::initializeEdgeMap() {
 
 	vigra::separableMultiDistSquared(
 			_volume.data(),
-			boundaryDistance,
+			_boundaryDistance,
 			false,  /* compute distance from object (non-zero) to background (0) */
 			pitch);
 
 	// find center point with maximal boundary distance
-	float maxBoundaryDistance2 = 0;
+	_maxBoundaryDistance2 = 0;
 	for (Graph::NodeIt node(_graph); node != lemon::INVALID; ++node) {
 
 		const Position& pos = _positionMap[node];
-		if (boundaryDistance[pos] > maxBoundaryDistance2) {
+		if (_boundaryDistance[pos] > _maxBoundaryDistance2) {
 
 			_center = node;
-			maxBoundaryDistance2 = boundaryDistance[pos];
+			_maxBoundaryDistance2 = _boundaryDistance[pos];
 		}
 	}
 
-	using namespace vigra::functor;
+	std::cout << _maxBoundaryDistance2 << std::endl;
 
-	// penalty = w*(1.0 - bd/max_bd)^16
-	//
-	//   bd    : boundary distance
-	//   max_bd: max boundary distance
-	//   16    : magic number, taken from TEASAR paper
-	vigra::transformMultiArray(
-			boundaryDistance,
-			boundaryDistance,
-			Param(boundaryWeight)*pow(Param(1.0) - sqrt(Arg1()/Param(maxBoundaryDistance2)), Param(16)));
+	using namespace vigra::functor;
 
 	// create initial edge map from boundary penalty
 	for (Graph::EdgeIt e(_graph); e != lemon::INVALID; ++e)
-		_distanceMap[e] = 0.5*(
-				boundaryDistance[_positionMap[_graph.u(e)]] +
-				boundaryDistance[_positionMap[_graph.v(e)]]);
+		_distanceMap[e] = boundaryPenalty(
+				0.5*(
+						_boundaryDistance[_positionMap[_graph.u(e)]] +
+						_boundaryDistance[_positionMap[_graph.v(e)]]));
 
 	// multiply with Euclidean node distances
 	//
@@ -211,20 +216,20 @@ Skeletonize::extractLongestBranch(Skeleton& skeleton) {
 	// find furthest point on boundary
 	Graph::Node furthest = Graph::NodeIt(_graph);
 	float maxValue = -1;
-	for (Graph::Node n : _boundary)
+	for (Graph::Node n : _boundary) {
+
+		if (_skipExplainedNodes && _volume[_positionMap[n]] == Explained)
+			continue;
+
 		if (_dijkstra.distMap()[n] > maxValue) {
 
 			furthest = n;
 			maxValue = _dijkstra.distMap()[n];
 		}
+	}
 
+	// no more points
 	if (maxValue == -1)
-		UTIL_THROW_EXCEPTION(
-				NoNodeFound,
-				"could not find a furthest boundary point");
-
-	// everything is part of the skeleton
-	if (maxValue == 0)
 		return false;
 
 	skeleton.openNode(gridToVolume(_positionMap[furthest]));
@@ -235,6 +240,9 @@ Skeletonize::extractLongestBranch(Skeleton& skeleton) {
 	while (_volume[_positionMap[n]] != OnSkeleton) {
 
 		_volume[_positionMap[n]] = OnSkeleton;
+
+		if (_skipExplainedNodes)
+			drawExplanationSphere(_positionMap[n]);
 
 		Graph::Edge pred = _dijkstra.predMap()[n];
 		Graph::Node u = _graph.u(pred);
@@ -252,4 +260,38 @@ Skeletonize::extractLongestBranch(Skeleton& skeleton) {
 	skeleton.closeNode();
 
 	return true;
+}
+
+void
+Skeletonize::drawExplanationSphere(const Position& center) {
+
+	double radius2 = _boundaryDistance[center]*pow(_explanationWeight, 2);
+
+	double resX2 = pow(_volume.getResolutionX(), 2);
+	double resY2 = pow(_volume.getResolutionY(), 2);
+	double resZ2 = pow(_volume.getResolutionZ(), 2);
+
+	for (Graph::Node n : _boundary) {
+
+		const Position& pos = _positionMap[n];
+		double distance2 =
+				resX2*pow(pos[0] - center[0], 2) +
+				resY2*pow(pos[1] - center[1], 2) +
+				resZ2*pow(pos[2] - center[2], 2);
+
+		if (distance2 <= radius2)
+			if (_volume[pos] != OnSkeleton)
+				_volume[pos] = Explained;
+	}
+}
+
+double
+Skeletonize::boundaryPenalty(double boundaryDistance) {
+
+	// penalty = w*(1.0 - bd/max_bd)^16
+	//
+	//   bd    : boundary distance
+	//   max_bd: max boundary distance
+	//   16    : magic number, taken from TEASAR paper
+	return _boundaryWeight*pow(1.0 - sqrt(boundaryDistance/_maxBoundaryDistance2), 16);
 }
