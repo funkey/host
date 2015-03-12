@@ -6,6 +6,8 @@
 #include <lemon/dijkstra.h>
 #include "Skeleton.h"
 
+class NoNodeFound : public Exception {};
+
 class Skeletonize {
 
 	typedef vigra::MultiArray<3, unsigned char> VolumeType;
@@ -21,6 +23,14 @@ public:
 	Skeleton getSkeleton();
 
 private:
+
+	enum VoxelLabel {
+
+		Background = 0,
+		Inside     = 1,
+		Boundary   = 2,
+		OnSkeleton = 3
+	};
 
 	/**
 	 * Initialize the edge map, such that initial edges inside the volume are 
@@ -53,8 +63,11 @@ private:
 	 * skeleton, and all points in the vicinity as beeing processed. The edge 
 	 * values along the shortest path will be set to zero. Additionally, the 
 	 * branch will be added to the passed skeleton.
+	 *
+	 * Returns true, if a path that is far enough from the existing skeleton was 
+	 * found.
 	 */
-	void extractLongestBranch(Skeleton& skeleton);
+	bool extractLongestBranch(Skeleton& skeleton);
 
 	/**
 	 * Find the point with the largest distance according to the last call to 
@@ -85,6 +98,8 @@ private:
 
 	Graph::Node _root;
 	Graph::Node _center;
+
+	std::vector<Graph::Node> _boundary;
 };
 
 #endif // HOST_TUBES_SKELETONIZE_H__

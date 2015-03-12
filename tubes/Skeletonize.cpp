@@ -10,6 +10,11 @@ util::ProgramOption optionSkeletonBoundaryWeight(
 		util::_description_text = "The weight of the boundary term to find the tube's skeletons.",
 		util::_default_value    = 1);
 
+util::ProgramOption optionSkeletonMaxNumBranches(
+		util::_long_name        = "skeletonMaxNumBranches",
+		util::_description_text = "The maximal number of branches to extract for a skeleton.",
+		util::_default_value    = 2);
+
 Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_volume(volume),
 	_positionMap(_graph),
@@ -17,23 +22,34 @@ Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_dijkstra(_graph, _distanceMap) {
 
 	vigra::MultiArray<3, Graph::Node> nodeIds(_volume.data().shape());
+	vigra::GridGraph<3> grid(_volume.data().shape(), vigra::IndirectNeighborhood);
 
-	for (int z = 0; z < _volume.depth();  z++)
-	for (int y = 0; y < _volume.height(); y++)
-	for (int x = 0; x < _volume.width();  x++) {
+	// add all non-background nodes
+	for (vigra::GridGraph<3>::NodeIt node(grid); node != lemon::INVALID; ++node) {
 
-		if (_volume(x, y, z) == 0)
+		if (_volume[node] == Background)
 			continue;
 
-		Graph::Node node = _graph.addNode();
-		nodeIds(x, y, z) = node;
-		_positionMap[node] = Position(x, y, z);
+		Graph::Node n   = _graph.addNode();
+		nodeIds[node]   = n;
+		_positionMap[n] = *node;
 	}
 
-	vigra::GridGraph<3> grid(_volume.data().shape(), vigra::IndirectNeighborhood);
+	// add all edges between non-background nodes and label boundary nodes 
+	// on-the-fly
 	for (vigra::GridGraph<3>::EdgeIt edge(grid); edge != lemon::INVALID; ++edge) {
 
-		if (_volume[grid.u(edge)] == 0 || _volume[grid.v(edge)] == 0)
+		int insideVoxels = (_volume[grid.u(edge)] != Background) + (_volume[grid.v(edge)] != Background);
+
+		if (insideVoxels == 1) {
+
+			if (_volume[grid.u(edge)] != Background)
+				_volume[grid.u(edge)] = Boundary;
+			if (_volume[grid.v(edge)] != Background)
+				_volume[grid.v(edge)] = Boundary;
+		}
+
+		if (insideVoxels != 2)
 			continue;
 
 		Graph::Node u = nodeIds[grid.u(edge)];
@@ -41,6 +57,11 @@ Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 
 		_graph.addEdge(u, v);
 	}
+
+	// get a list of boundary nodes
+	for (Graph::NodeIt node(_graph); node != lemon::INVALID; ++node)
+		if (_volume[_positionMap[node]] == Boundary)
+			_boundary.push_back(node);
 }
 
 Skeleton
@@ -56,11 +77,9 @@ Skeletonize::getSkeleton() {
 
 	Skeleton skeleton;
 
-	// TODO:
-	// • repeat until next longest branch is shorter than a threshold
-	// • or certain number of branches extracted
-	extractLongestBranch(skeleton);
-	extractLongestBranch(skeleton);
+	int maxNumBranches = optionSkeletonMaxNumBranches;
+	int branchesFound = 0;
+	while (extractLongestBranch(skeleton) && ++branchesFound < maxNumBranches) {}
 
 	return skeleton;
 }
@@ -87,7 +106,7 @@ Skeletonize::initializeEdgeMap() {
 	vigra::separableMultiDistSquared(
 			_volume.data(),
 			boundaryDistance,
-			false,  /* compute distance from object (1) to background (0) */
+			false,  /* compute distance from object (non-zero) to background (0) */
 			pitch);
 
 	// find center point with maximal boundary distance
@@ -161,59 +180,76 @@ Skeletonize::findRoot() {
 
 	_dijkstra.run(_center);
 
-	Graph::Node root;
-	float maxValue = 0;
-	for (Graph::NodeIt n(_graph); n != lemon::INVALID; ++n)
+	// find furthest point on boundary
+	Graph::Node root = Graph::NodeIt(_graph);
+	float maxValue = -1;
+	for (Graph::Node n : _boundary)
 		if (_dijkstra.distMap()[n] > maxValue) {
 
 			root     = n;
 			maxValue = _dijkstra.distMap()[n];
 		}
 
+	if (maxValue == -1)
+		UTIL_THROW_EXCEPTION(
+				NoNodeFound,
+				"could not find a root boundary point");
+
 	// mark root as being part of skeleton
-	_volume[_positionMap[root]] = 2;
+	_volume[_positionMap[root]] = OnSkeleton;
 
 	return root;
 }
 
-void
+bool
 Skeletonize::extractLongestBranch(Skeleton& skeleton) {
 
 	Timer t(__FUNCTION__);
 
 	_dijkstra.run(_root);
 
-	// find furthest point
-	Graph::Node furthest;
-	float maxValue = 0;
-	for (Graph::NodeIt n(_graph); n != lemon::INVALID; ++n) {
+	// find furthest point on boundary
+	Graph::Node furthest = Graph::NodeIt(_graph);
+	float maxValue = -1;
+	for (Graph::Node n : _boundary)
 		if (_dijkstra.distMap()[n] > maxValue) {
 
 			furthest = n;
 			maxValue = _dijkstra.distMap()[n];
 		}
-	}
+
+	if (maxValue == -1)
+		UTIL_THROW_EXCEPTION(
+				NoNodeFound,
+				"could not find a furthest boundary point");
+
+	// everything is part of the skeleton
+	if (maxValue == 0)
+		return false;
 
 	skeleton.openNode(gridToVolume(_positionMap[furthest]));
 
 	Graph::Node n = furthest;
 
 	// walk backwards to next skeleton point
-	while (_volume[_positionMap[n]] != 2) {
+	while (_volume[_positionMap[n]] != OnSkeleton) {
+
+		_volume[_positionMap[n]] = OnSkeleton;
 
 		Graph::Edge pred = _dijkstra.predMap()[n];
-
 		Graph::Node u = _graph.u(pred);
 		Graph::Node v = _graph.v(pred);
 
 		n = (u == n ? v : u);
 
 		skeleton.extendEdge(gridToVolume(_positionMap[n]));
-		_distanceMap[pred] = 0;
+		_distanceMap[pred] = 0.0;
 	}
 
 	skeleton.openNode(gridToVolume(_positionMap[_root]));
 	skeleton.closeNode();
 
 	skeleton.closeNode();
+
+	return true;
 }
