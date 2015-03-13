@@ -19,7 +19,12 @@ util::ProgramOption optionSkeletonMaxNumSegments(
 util::ProgramOption optionSkeletonMinSegmentLength(
 		util::_long_name        = "skeletonMinSegmentLength",
 		util::_description_text = "The mininal length of a segment (including the boundary penalty) to extract for a skeleton.",
-		util::_default_value    = 1e6);
+		util::_default_value    = 0);
+
+util::ProgramOption optionSkeletonMinSegmentLengthRatio(
+		util::_long_name        = "skeletonMinSegmentLengthRatio",
+		util::_description_text = "The mininal length of a segment (including the boundary penalty) as a ration of the largest segment to extract for a skeleton.",
+		util::_default_value    = 1);
 
 util::ProgramOption optionSkeletonSkipExplainedNodes(
 		util::_long_name        = "skeletonSkipExplainedNodes",
@@ -43,6 +48,7 @@ Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_boundaryWeight(optionSkeletonBoundaryWeight),
 	_dijkstra(_graph, _distanceMap),
 	_minSegmentLength(optionSkeletonMinSegmentLength),
+	_minSegmentLengthRatio(optionSkeletonMinSegmentLengthRatio),
 	_skipExplainedNodes(optionSkeletonSkipExplainedNodes),
 	_explanationWeight(optionSkeletonExplanationWeight) {
 
@@ -257,6 +263,16 @@ Skeletonize::extractLongestSegment() {
 		n = (u == n ? v : u);
 
 		_distanceMap[pred] = 0.0;
+	}
+
+	// first segment?
+	if (n == _root) {
+
+		LOG_DEBUG(skeletonizelog) << "longest segment has length " << maxValue << std::endl;
+
+		_minSegmentLength = std::max(_minSegmentLength, _minSegmentLengthRatio*maxValue);
+
+		LOG_DEBUG(skeletonizelog) << "setting min segment length to " << _minSegmentLength << std::endl;
 	}
 
 	return true;

@@ -138,6 +138,7 @@ private:
 	float _maxBoundaryDistance2;
 
 	double _minSegmentLength;
+	double _minSegmentLengthRatio;
 
 	bool   _skipExplainedNodes;
 	double _explanationWeight;
