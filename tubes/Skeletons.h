@@ -2,8 +2,8 @@
 #define HOST_TUBES_SKELETONS_H__
 
 #include <imageprocessing/Volume.h>
+#include <imageprocessing/Skeleton.h>
 #include "TubePropertyMap.h"
-#include "Skeleton.h"
 
 class Skeletons : public TubePropertyMap<Skeleton>, public Volume {
 

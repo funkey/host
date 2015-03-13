@@ -3,8 +3,8 @@
 
 #include <tubes/io/TubeStore.h>
 #include <imageprocessing/ExplicitVolume.h>
+#include <imageprocessing/Skeletonize.h>
 #include "Skeletons.h"
-#include "Skeletonize.h"
 
 class SkeletonExtractor {
 
