@@ -10,14 +10,14 @@ util::ProgramOption optionSkeletonBoundaryWeight(
 		util::_description_text = "The weight of the boundary term to find the tube's skeletons.",
 		util::_default_value    = 1);
 
-util::ProgramOption optionSkeletonMaxNumBranches(
-		util::_long_name        = "skeletonMaxNumBranches",
-		util::_description_text = "The maximal number of branches to extract for a skeleton.",
+util::ProgramOption optionSkeletonMaxNumSegments(
+		util::_long_name        = "skeletonMaxNumSegments",
+		util::_description_text = "The maximal number of segments to extract for a skeleton.",
 		util::_default_value    = 10);
 
 util::ProgramOption optionSkeletonSkipExplainedNodes(
 		util::_long_name        = "skeletonSkipExplainedNodes",
-		util::_description_text = "Don't add branches to nodes that are already explained by the current skeleton. "
+		util::_description_text = "Don't add segments to nodes that are already explained by the current skeleton. "
 		                          "Nodes are explained, if they fall within a sphere around any current skeleton node. "
 		                          "The size of the sphere is determined by boundary distance * skeletonExplanationWeight.");
 
@@ -92,9 +92,9 @@ Skeletonize::getSkeleton() {
 
 	setRoot(root);
 
-	int maxNumBranches = optionSkeletonMaxNumBranches;
-	int branchesFound = 0;
-	while (extractLongestBranch() && ++branchesFound < maxNumBranches) {}
+	int maxNumSegments = optionSkeletonMaxNumSegments;
+	int segmentsFound = 0;
+	while (extractLongestSegment() && ++segmentsFound < maxNumSegments) {}
 
 	return parseVolumeSkeleton();
 }
@@ -205,7 +205,7 @@ Skeletonize::findRoot() {
 }
 
 bool
-Skeletonize::extractLongestBranch() {
+Skeletonize::extractLongestSegment() {
 
 	Timer t(__FUNCTION__);
 

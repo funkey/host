@@ -72,12 +72,12 @@ private:
 	 * current skeleton. This marks all points on the path as being part of the 
 	 * skeleton, and all points in the vicinity as beeing processed. The edge 
 	 * values along the shortest path will be set to zero. Additionally, the 
-	 * branch will be added to the passed skeleton.
+	 * segment will be added to the passed skeleton.
 	 *
 	 * Returns true, if a path that is far enough from the existing skeleton was 
 	 * found.
 	 */
-	bool extractLongestBranch();
+	bool extractLongestSegment();
 
 	/**
 	 * Draw a sphere around the current point, marking all boundary points 
