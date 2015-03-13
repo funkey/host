@@ -52,6 +52,8 @@ Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_skipExplainedNodes(optionSkeletonSkipExplainedNodes),
 	_explanationWeight(optionSkeletonExplanationWeight) {
 
+	Timer t(__FUNCTION__);
+
 	vigra::MultiArray<3, Graph::Node> nodeIds(_volume.data().shape());
 	vigra::GridGraph<3> grid(_volume.data().shape(), vigra::IndirectNeighborhood);
 
@@ -144,8 +146,6 @@ Skeletonize::initializeEdgeMap() {
 			_maxBoundaryDistance2 = _boundaryDistance[pos];
 		}
 	}
-
-	std::cout << _maxBoundaryDistance2 << std::endl;
 
 	using namespace vigra::functor;
 
