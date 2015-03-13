@@ -6,6 +6,7 @@
 #include <vigra/multi_resize.hxx>
 #include <vigra/multi_watersheds.hxx>
 #include <vigra/functorexpression.hxx>
+#include <util/timing.h>
 
 logger::LogChannel skeletonextractorlog("skeletonextractorlog", "[SkeletonExtractor] ");
 
@@ -25,6 +26,8 @@ SkeletonExtractor::extract() {
 
 		LOG_DEBUG(skeletonextractorlog)
 				<< "processing tube " << id << std::endl;
+
+		Timer t("skeletonize volume");
 
 		Skeletonize skeletonize(volumes[id]);
 		skeletons.insert(id, skeletonize.getSkeleton());
