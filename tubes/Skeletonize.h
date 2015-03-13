@@ -25,8 +25,7 @@ public:
 	Skeletonize(ExplicitVolume<unsigned char>& volume);
 
 	/**
-	 * Extract the skeleton from the given volume. This will change the values 
-	 * of the inside voxels of the volume, see enum VoxelLabel.
+	 * Extract the skeleton from the given volume.
 	 */
 	Skeleton getSkeleton();
 
@@ -41,6 +40,18 @@ private:
 		OnSkeleton = 4, /* skeleton voxels */
 		Visited    = 5  /* skeleton voxels that have been added to Skeleton datastructure (eventually, all OnSkeleton voxels)*/
 	};
+
+	/**
+	 * Set the volume to process, try to downsample it on the fly.
+	 */
+	void setVolume(const ExplicitVolume<unsigned char>& volume);
+
+	void downsampleVolume(const ExplicitVolume<unsigned char>& volume);
+
+	/**
+	 * Create the voxel graph to use for skeletonization.
+	 */
+	void createVoxelGraph();
 
 	/**
 	 * Initialize the edge map, such that initial edges inside the volume are 
@@ -117,7 +128,9 @@ private:
 	int numNeighbors(const Position& pos);
 
 	// reference to the volume to process
-	ExplicitVolume<unsigned char>& _volume;
+	ExplicitVolume<unsigned char> _volume;
+
+	bool _downSampleVolume;
 
 	vigra::MultiArray<3, float> _boundaryDistance;
 
