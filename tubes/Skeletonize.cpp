@@ -4,6 +4,7 @@
 #include <vigra/multi_gridgraph.hxx>
 #include <util/timing.h>
 #include <util/ProgramOptions.h>
+#include <util/Logger.h>
 
 util::ProgramOption optionSkeletonBoundaryWeight(
 		util::_long_name        = "skeletonBoundaryWeight",
@@ -14,6 +15,11 @@ util::ProgramOption optionSkeletonMaxNumSegments(
 		util::_long_name        = "skeletonMaxNumSegments",
 		util::_description_text = "The maximal number of segments to extract for a skeleton.",
 		util::_default_value    = 10);
+
+util::ProgramOption optionSkeletonMinSegmentLength(
+		util::_long_name        = "skeletonMinSegmentLength",
+		util::_description_text = "The mininal length of a segment (including the boundary penalty) to extract for a skeleton.",
+		util::_default_value    = 1e6);
 
 util::ProgramOption optionSkeletonSkipExplainedNodes(
 		util::_long_name        = "skeletonSkipExplainedNodes",
@@ -27,6 +33,7 @@ util::ProgramOption optionSkeletonExplanationWeight(
 		                          "See skeletonSkipExplainedNodes.",
 		util::_default_value    = 1);
 
+logger::LogChannel skeletonizelog("skeletonizelog", "[Skeletonize] ");
 
 Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_volume(volume),
@@ -35,6 +42,7 @@ Skeletonize::Skeletonize(ExplicitVolume<unsigned char>& volume) :
 	_distanceMap(_graph),
 	_boundaryWeight(optionSkeletonBoundaryWeight),
 	_dijkstra(_graph, _distanceMap),
+	_minSegmentLength(optionSkeletonMinSegmentLength),
 	_skipExplainedNodes(optionSkeletonSkipExplainedNodes),
 	_explanationWeight(optionSkeletonExplanationWeight) {
 
@@ -226,9 +234,11 @@ Skeletonize::extractLongestSegment() {
 		}
 	}
 
-	// no more points
-	if (maxValue == -1)
+	// no more points or length smaller then min segment length
+	if (maxValue == -1 || maxValue < _minSegmentLength)
 		return false;
+
+	LOG_DEBUG(skeletonizelog) << "extracting segment with length " << maxValue << std::endl;
 
 	Graph::Node n = furthest;
 
