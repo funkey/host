@@ -27,10 +27,20 @@ SkeletonExtractor::extract() {
 		LOG_DEBUG(skeletonextractorlog)
 				<< "processing tube " << id << std::endl;
 
-		Timer t("skeletonize volume");
+		try {
 
-		Skeletonize skeletonize(volumes[id]);
-		skeletons.insert(id, skeletonize.getSkeleton());
+			Timer t("skeletonize volume");
+
+			Skeletonize skeletonize(volumes[id]);
+			skeletons.insert(id, skeletonize.getSkeleton());
+
+		} catch (NoNodeFound& e) {
+
+			LOG_USER(skeletonextractorlog)
+					<< "tube " << id
+					<< " could not be skeletonized (NoNodeFound)"
+					<< std::endl;
+		}
 	}
 
 	_store->saveSkeletons(skeletons);
