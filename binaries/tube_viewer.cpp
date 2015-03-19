@@ -27,6 +27,9 @@ util::ProgramOption optionTubeId(
 		util::_short_name       = "i",
 		util::_description_text = "The ids of the tubes to show (separated by a single non-decimal character). If not given, all tubes are shown.");
 
+util::ProgramOption optionShowNormals(
+		util::_long_name        = "showNormals",
+		util::_description_text = "Show the mesh normals.");
 
 template <typename EV>
 class ExplicitVolumeAdaptor {
@@ -169,7 +172,8 @@ int main(int argc, char** argv) {
 		zoomView->add(rotateView);
 		rotateView->add(meshView);
 		rotateView->add(skeletonView);
-		rotateView->add(normalsView);
+		if (optionShowNormals)
+			rotateView->add(normalsView);
 		rotateView->add(controller);
 
 		meshView->setMeshes(meshes);
