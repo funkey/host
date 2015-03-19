@@ -17,7 +17,7 @@ SkeletonView::onSignal(sg_gui::Draw& /*draw*/) {
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	glColor3f(0, 0, 0);
+	glColor3f(255, 53, 127);
 
 	for (auto& p : *_skeletons)
 		drawSkeleton(p.second);
@@ -42,44 +42,8 @@ SkeletonView::onSignal(sg_gui::QuerySize& signal) {
 void
 SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 
-	for (Skeleton::Graph::NodeIt n(skeleton.graph()); n != lemon::INVALID; ++n) {
-
-		const Skeleton::Position& u = skeleton.positions()[n];
-
-		glBegin(GL_QUADS);
-
-		glVertex3d(u[0]-10, u[1]-10, u[2]+10);
-		glVertex3d(u[0]+10, u[1]-10, u[2]+10);
-		glVertex3d(u[0]+10, u[1]+10, u[2]+10);
-		glVertex3d(u[0]-10, u[1]+10, u[2]+10);
-
-		glVertex3d(u[0]-10, u[1]-10, u[2]-10);
-		glVertex3d(u[0]+10, u[1]-10, u[2]-10);
-		glVertex3d(u[0]+10, u[1]+10, u[2]-10);
-		glVertex3d(u[0]-10, u[1]+10, u[2]-10);
-
-		glVertex3d(u[0]-10, u[1]+10, u[2]-10);
-		glVertex3d(u[0]+10, u[1]+10, u[2]-10);
-		glVertex3d(u[0]+10, u[1]+10, u[2]+10);
-		glVertex3d(u[0]-10, u[1]+10, u[2]+10);
-
-		glVertex3d(u[0]-10, u[1]-10, u[2]-10);
-		glVertex3d(u[0]+10, u[1]-10, u[2]-10);
-		glVertex3d(u[0]+10, u[1]-10, u[2]+10);
-		glVertex3d(u[0]-10, u[1]-10, u[2]+10);
-
-		glVertex3d(u[0]+10 ,u[1]-10, u[2]-10);
-		glVertex3d(u[0]+10 ,u[1]+10, u[2]-10);
-		glVertex3d(u[0]+10 ,u[1]+10, u[2]+10);
-		glVertex3d(u[0]+10 ,u[1]-10, u[2]+10);
-
-		glVertex3d(u[0]-10 ,u[1]-10, u[2]-10);
-		glVertex3d(u[0]-10 ,u[1]+10, u[2]-10);
-		glVertex3d(u[0]-10 ,u[1]+10, u[2]+10);
-		glVertex3d(u[0]-10 ,u[1]-10, u[2]+10);
-
-		glEnd();
-	}
+	glLineWidth(2.0);
+	glEnable(GL_LINE_SMOOTH);
 
 	for (Skeleton::Graph::EdgeIt e(skeleton.graph()); e != lemon::INVALID; ++e) {
 
@@ -101,40 +65,6 @@ SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 			}
 
 			prev  = p;
-
-			glBegin(GL_QUADS);
-
-			glVertex3d(p[0]-5, p[1]-5, p[2]+5);
-			glVertex3d(p[0]+5, p[1]-5, p[2]+5);
-			glVertex3d(p[0]+5, p[1]+5, p[2]+5);
-			glVertex3d(p[0]-5, p[1]+5, p[2]+5);
-
-			glVertex3d(p[0]-5, p[1]-5, p[2]-5);
-			glVertex3d(p[0]+5, p[1]-5, p[2]-5);
-			glVertex3d(p[0]+5, p[1]+5, p[2]-5);
-			glVertex3d(p[0]-5, p[1]+5, p[2]-5);
-
-			glVertex3d(p[0]-5, p[1]+5, p[2]-5);
-			glVertex3d(p[0]+5, p[1]+5, p[2]-5);
-			glVertex3d(p[0]+5, p[1]+5, p[2]+5);
-			glVertex3d(p[0]-5, p[1]+5, p[2]+5);
-
-			glVertex3d(p[0]-5, p[1]-5, p[2]-5);
-			glVertex3d(p[0]+5, p[1]-5, p[2]-5);
-			glVertex3d(p[0]+5, p[1]-5, p[2]+5);
-			glVertex3d(p[0]-5, p[1]-5, p[2]+5);
-
-			glVertex3d(p[0]+5 ,p[1]-5, p[2]-5);
-			glVertex3d(p[0]+5 ,p[1]+5, p[2]-5);
-			glVertex3d(p[0]+5 ,p[1]+5, p[2]+5);
-			glVertex3d(p[0]+5 ,p[1]-5, p[2]+5);
-
-			glVertex3d(p[0]-5 ,p[1]-5, p[2]-5);
-			glVertex3d(p[0]-5 ,p[1]+5, p[2]-5);
-			glVertex3d(p[0]-5 ,p[1]+5, p[2]+5);
-			glVertex3d(p[0]-5 ,p[1]-5, p[2]+5);
-
-			glEnd();
 		}
 	}
 }
