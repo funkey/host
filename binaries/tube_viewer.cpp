@@ -31,6 +31,11 @@ util::ProgramOption optionShowNormals(
 		util::_long_name        = "showNormals",
 		util::_description_text = "Show the mesh normals.");
 
+util::ProgramOption optionCubeSize(
+		util::_long_name        = "cubeSize",
+		util::_description_text = "The size of a cube for the marching cubes visualization.",
+		util::_default_value    = 10);
+
 template <typename EV>
 class ExplicitVolumeAdaptor {
 
@@ -152,9 +157,9 @@ int main(int argc, char** argv) {
 			boost::shared_ptr<Mesh> mesh = marchingCubes.generateSurface(
 					adaptor,
 					MarchingCubes<Adaptor>::AcceptAbove(0.5),
-					10.0,
-					10.0,
-					10.0);
+					optionCubeSize,
+					optionCubeSize,
+					optionCubeSize);
 			meshes->add(id, mesh);
 		}
 
