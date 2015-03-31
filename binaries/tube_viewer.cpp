@@ -4,12 +4,11 @@
 
 #include <util/ProgramOptions.h>
 #include <imageprocessing/ExplicitVolume.h>
-#include <tubes/gui/SkeletonView.h>
-#include <tubes/gui/NormalsView.h>
+#include <tubes/gui/TubeView.h>
 #include <tubes/io/Hdf5TubeStore.h>
+#include <volumes/io/Hdf5VolumeStore.h>
 #include <sg_gui/MarchingCubes.h>
 #include <sg_gui/Mesh.h>
-#include <sg_gui/MeshView.h>
 #include <sg_gui/RotateView.h>
 #include <sg_gui/ZoomView.h>
 #include <sg_gui/Window.h>
@@ -26,10 +25,6 @@ util::ProgramOption optionTubeId(
 		util::_long_name        = "id",
 		util::_short_name       = "i",
 		util::_description_text = "The ids of the tubes to show (separated by a single non-decimal character). If not given, all tubes are shown.");
-
-util::ProgramOption optionShowNormals(
-		util::_long_name        = "showNormals",
-		util::_description_text = "Show the mesh normals.");
 
 util::ProgramOption optionCubeSize(
 		util::_long_name        = "cubeSize",
@@ -66,37 +61,6 @@ private:
 
 };
 
-class Controller :
-		public sg::Agent<
-				Controller,
-				sg::Accepts<
-						KeyDown
-				>,
-				sg::Provides<
-						ChangeAlpha
-				>
-		> {
-
-public:
-
-	Controller() :
-		_alpha(1.0) {}
-
-	void onSignal(KeyDown& signal) {
-
-		if (signal.key == sg_gui::keys::Tab) {
-
-			_alpha += 0.5;
-			if (_alpha > 1.0)
-				_alpha = 0;
-
-			send<ChangeAlpha>(_alpha);
-		}
-	}
-
-	double _alpha;
-};
-
 int main(int argc, char** argv) {
 
 	try {
@@ -104,9 +68,10 @@ int main(int argc, char** argv) {
 		util::ProgramOptions::init(argc, argv);
 		logger::LogManager::init();
 
-		// create an hdf5 tube store
+		// create hdf5 stores
 
-		Hdf5TubeStore tubeStore(optionProjectFile.as<std::string>());
+		Hdf5TubeStore   tubeStore(optionProjectFile.as<std::string>());
+		Hdf5VolumeStore volumeStore(optionProjectFile.as<std::string>());
 
 		// get requested tube ids
 
@@ -132,7 +97,7 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		// get volumes
+		// get tube volumes
 
 		Volumes volumes;
 		tubeStore.retrieveVolumes(ids, volumes);
@@ -154,7 +119,7 @@ int main(int argc, char** argv) {
 			Adaptor adaptor(volume);
 
 			MarchingCubes<Adaptor> marchingCubes;
-			boost::shared_ptr<Mesh> mesh = marchingCubes.generateSurface(
+			std::shared_ptr<Mesh> mesh = marchingCubes.generateSurface(
 					adaptor,
 					MarchingCubes<Adaptor>::AcceptAbove(0.5),
 					optionCubeSize,
@@ -163,27 +128,25 @@ int main(int argc, char** argv) {
 			meshes->add(id, mesh);
 		}
 
+		// get intensities
+
+		auto intensities = std::make_shared<ExplicitVolume<float>>();
+		volumeStore.retrieveIntensities(*intensities);
+
 		// visualize
 
-		auto controller   = std::make_shared<Controller>();
-		auto skeletonView = std::make_shared<SkeletonView>();
-		auto normalsView  = std::make_shared<NormalsView>();
-		auto meshView     = std::make_shared<MeshView>();
+		auto tubeView     = std::make_shared<TubeView>();
 		auto rotateView   = std::make_shared<RotateView>();
 		auto zoomView     = std::make_shared<ZoomView>(true);
 		auto window       = std::make_shared<sg_gui::Window>("tube viewer");
 
 		window->add(zoomView);
 		zoomView->add(rotateView);
-		rotateView->add(meshView);
-		rotateView->add(skeletonView);
-		if (optionShowNormals)
-			rotateView->add(normalsView);
-		rotateView->add(controller);
+		rotateView->add(tubeView);
 
-		meshView->setMeshes(meshes);
-		skeletonView->setSkeletons(skeletons);
-		normalsView->setMeshes(meshes);
+		tubeView->setTubeMeshes(meshes);
+		tubeView->setTubeSkeletons(skeletons);
+		tubeView->setRawVolume(intensities);
 
 		window->processEvents();
 
