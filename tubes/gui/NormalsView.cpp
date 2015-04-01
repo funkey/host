@@ -23,10 +23,10 @@ NormalsView::onSignal(sg_gui::QuerySize& signal) {
 
 	signal.setSize(
 			util::rect<double>(
-				_meshes->getBoundingBox().getMinX(),
-				_meshes->getBoundingBox().getMinY(),
-				_meshes->getBoundingBox().getMaxX(),
-				_meshes->getBoundingBox().getMaxY()));
+				_meshes->getBoundingBox().minX,
+				_meshes->getBoundingBox().minY,
+				_meshes->getBoundingBox().maxX,
+				_meshes->getBoundingBox().maxY));
 }
 
 void

@@ -33,10 +33,10 @@ SkeletonView::onSignal(sg_gui::QuerySize& signal) {
 
 	signal.setSize(
 			util::rect<double>(
-				_skeletons->getBoundingBox().getMinX(),
-				_skeletons->getBoundingBox().getMinY(),
-				_skeletons->getBoundingBox().getMaxX(),
-				_skeletons->getBoundingBox().getMaxY()));
+				_skeletons->getBoundingBox().minX,
+				_skeletons->getBoundingBox().minY,
+				_skeletons->getBoundingBox().maxX,
+				_skeletons->getBoundingBox().maxY));
 }
 
 void

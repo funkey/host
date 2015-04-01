@@ -29,8 +29,10 @@ protected:
 				dataset,
 				"bounding box",
 				bb);
-		volume.getBoundingBox().setMin(bb[0], bb[1], bb[2]);
-		volume.getBoundingBox().setMax(bb[3], bb[4], bb[5]);
+		volume.setBoundingBox(
+				util::box<float>(
+						bb[0], bb[1], bb[2],
+						bb[3], bb[4], bb[5]));
 
 		// resolution
 		_hdfFile.readAttribute(
