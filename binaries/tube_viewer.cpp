@@ -41,7 +41,7 @@ public:
 	ExplicitVolumeAdaptor(const EV& ev) :
 		_ev(ev) {}
 
-	const util::box<float>& getBoundingBox() const { return _ev.getBoundingBox(); }
+	const util::box<float,3>& getBoundingBox() const { return _ev.getBoundingBox(); }
 
 	float operator()(float x, float y, float z) const {
 

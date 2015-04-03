@@ -26,12 +26,12 @@ protected:
 		vigra::MultiArray<1, float> res(3);
 
 		// bounding-box
-		bb[0] = volume.getBoundingBox().minX;
-		bb[1] = volume.getBoundingBox().minY;
-		bb[2] = volume.getBoundingBox().minZ;
-		bb[3] = volume.getBoundingBox().maxX;
-		bb[4] = volume.getBoundingBox().maxY;
-		bb[5] = volume.getBoundingBox().maxZ;
+		bb[0] = volume.getBoundingBox().min().x();
+		bb[1] = volume.getBoundingBox().min().y();
+		bb[2] = volume.getBoundingBox().min().z();
+		bb[3] = volume.getBoundingBox().max().x();
+		bb[4] = volume.getBoundingBox().max().y();
+		bb[5] = volume.getBoundingBox().max().z();
 		_hdfFile.writeAttribute(
 				dataset,
 				"bounding box",

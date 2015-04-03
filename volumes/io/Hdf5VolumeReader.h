@@ -30,7 +30,7 @@ protected:
 				"bounding box",
 				bb);
 		volume.setBoundingBox(
-				util::box<float>(
+				util::box<float,3>(
 						bb[0], bb[1], bb[2],
 						bb[3], bb[4], bb[5]));
 

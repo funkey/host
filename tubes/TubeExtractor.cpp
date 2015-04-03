@@ -4,7 +4,7 @@
 void
 TubeExtractor::extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& ids) {
 
-	std::map<TubeId, util::box<float>> bbs;
+	std::map<TubeId, util::box<float,3>> bbs;
 
 	float resX = labels.getResolutionX();
 	float resY = labels.getResolutionY();
@@ -20,7 +20,7 @@ TubeExtractor::extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& 
 		if (id == 0)
 			continue;
 
-		bbs[id] += util::box<float>(x, y, z, x+1, y+1, z+1);
+		bbs[id] += util::box<float,3>(x, y, z, x+1, y+1, z+1);
 	}
 
 	// extract the tube volumes
@@ -28,8 +28,8 @@ TubeExtractor::extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& 
 
 	for (auto& p : bbs) {
 
-		TubeId            id = p.first;
-		util::box<float>& bb = p.second;
+		TubeId              id = p.first;
+		util::box<float,3>& bb = p.second;
 
 		if (!ids.empty())
 			if (!ids.count(id))
@@ -47,8 +47,8 @@ TubeExtractor::extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& 
 		// copy data
 		vigra::transformMultiArray(
 				labels.data().subarray(
-						vigra::Shape3(bb.minX, bb.minY, bb.minZ),
-						vigra::Shape3(bb.maxX, bb.maxY, bb.maxZ)),
+						vigra::Shape3(bb.min().x(), bb.min().y(), bb.min().z()),
+						vigra::Shape3(bb.max().x(), bb.max().y(), bb.max().z())),
 				volumes[id].data(),
 				(vigra::functor::Arg1() == vigra::functor::Param(id)));
 	}

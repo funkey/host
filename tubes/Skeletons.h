@@ -9,9 +9,9 @@ class Skeletons : public TubePropertyMap<Skeleton>, public Volume {
 
 protected:
 
-	util::box<float> computeBoundingBox() const override {
+	util::box<float,3> computeBoundingBox() const override {
 
-		util::box<float> bb;
+		util::box<float,3> bb;
 
 		for (auto& p : *this)
 			bb += p.second.getBoundingBox();
