@@ -9,12 +9,19 @@ TubeView::TubeView() :
 	_skeletonView(std::make_shared<SkeletonView>()),
 	_normalsView(std::make_shared<NormalsView>()),
 	_meshView(std::make_shared<sg_gui::MeshView>()),
-	_volumeView(std::make_shared<sg_gui::VolumeView>()),
+	_rawView(std::make_shared<sg_gui::VolumeView>()),
+	_labelsView(std::make_shared<sg_gui::VolumeView>()),
 	_alpha(1.0) {
 
+	auto rawScope    = std::make_shared<RawScope>();
+	auto labelsScope = std::make_shared<LabelsScope>();
+	rawScope->add(_rawView);
+	labelsScope->add(_labelsView);
+
+	add(rawScope);
+	add(labelsScope);
 	add(_skeletonView);
 	add(_meshView);
-	add(_volumeView);
 
 	if (optionShowNormals)
 		add(_normalsView);
@@ -36,7 +43,13 @@ TubeView::setTubeSkeletons(std::shared_ptr<Skeletons> skeletons) {
 void
 TubeView::setRawVolume(std::shared_ptr<ExplicitVolume<float>> volume) {
 
-	_volumeView->setVolume(volume);
+	_rawView->setVolume(volume);
+}
+
+void
+TubeView::setLabelsVolume(std::shared_ptr<ExplicitVolume<float>> volume) {
+
+	_labelsView->setVolume(volume);
 }
 
 void

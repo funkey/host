@@ -32,14 +32,74 @@ public:
 
 	void setRawVolume(std::shared_ptr<ExplicitVolume<float>> volume);
 
+	void setLabelsVolume(std::shared_ptr<ExplicitVolume<float>> volume);
+
 	void onSignal(sg_gui::KeyDown& signal);
 
 private:
 
+	/**
+	 * Scope preventing change alpha signals to get to raw images.
+	 */
+	class RawScope : public sg::Scope<
+			RawScope,
+			sg::FiltersDown<
+					sg_gui::ChangeAlpha
+			>,
+			sg::PassesUp<
+					sg_gui::ContentChanged
+			>
+	> {
+
+	public:
+
+		bool filterDown(sg_gui::ChangeAlpha&) { return false; }
+		void unfilterDown(sg_gui::ChangeAlpha&) {}
+	};
+
+	/**
+	 * Scope preventing change alpha signals to get to label images, also 
+	 * ignores depth buffer for drawing on top of raw images.
+	 */
+	class LabelsScope : public sg::Scope<
+			LabelsScope,
+			sg::FiltersDown<
+					sg_gui::DrawTranslucent,
+					sg_gui::ChangeAlpha
+			>,
+			sg::ProvidesInner<
+					sg_gui::ChangeAlpha
+			>,
+			sg::PassesUp<
+					sg_gui::ContentChanged
+			>
+	> {
+
+	public:
+
+		bool filterDown(sg_gui::DrawTranslucent&) {
+
+			glDisable(GL_DEPTH_TEST);
+			sendInner<sg_gui::ChangeAlpha>(0.5);
+
+			return true;
+		}
+
+		void unfilterDown(sg_gui::DrawTranslucent&) {
+
+			glEnable(GL_DEPTH_TEST);
+		}
+
+		bool filterDown(sg_gui::ChangeAlpha&) { return false; }
+		void unfilterDown(sg_gui::ChangeAlpha&) {}
+	};
+
+
 	std::shared_ptr<SkeletonView>       _skeletonView;
 	std::shared_ptr<NormalsView>        _normalsView;
 	std::shared_ptr<sg_gui::MeshView>   _meshView;
-	std::shared_ptr<sg_gui::VolumeView> _volumeView;
+	std::shared_ptr<sg_gui::VolumeView> _rawView;
+	std::shared_ptr<sg_gui::VolumeView> _labelsView;
 
 	double _alpha;
 };

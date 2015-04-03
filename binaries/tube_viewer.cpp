@@ -128,10 +128,13 @@ int main(int argc, char** argv) {
 			meshes->add(id, mesh);
 		}
 
-		// get intensities
+		// get intensities and labels
 
 		auto intensities = std::make_shared<ExplicitVolume<float>>();
 		volumeStore.retrieveIntensities(*intensities);
+		ExplicitVolume<int> l;
+		volumeStore.retrieveLabels(l);
+		auto labels = std::make_shared<ExplicitVolume<float>>(l);
 
 		// visualize
 
@@ -147,6 +150,7 @@ int main(int argc, char** argv) {
 		tubeView->setTubeMeshes(meshes);
 		tubeView->setTubeSkeletons(skeletons);
 		tubeView->setRawVolume(intensities);
+		tubeView->setLabelsVolume(labels);
 
 		window->processEvents();
 
