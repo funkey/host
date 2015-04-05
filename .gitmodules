@@ -16,9 +16,6 @@
 [submodule "modules/region_features"]
 	path = modules/region_features
 	url = https://github.com/funkey/region_features
-[submodule "modules/gui"]
-	path = modules/gui
-	url = https://github.com/funkey/gui
 [submodule "modules/cohear"]
 	path = modules/cohear
 	url = http://github.com/funkey/cohear
