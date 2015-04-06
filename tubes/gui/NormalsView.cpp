@@ -53,15 +53,15 @@ NormalsView::updateRecording() {
 			const sg_gui::Vector3d& n2 = 10*_meshes->get(id)->getNormal(triangle.v2);
 
 			glBegin(GL_LINES);
-			glVertex3f(v0.x, v0.y, v0.z); glVertex3f(v0.x + n0.x, v0.y + n0.y, v0.z + n0.z); 
+			glVertex3f(v0.x(), v0.y(), v0.z()); glVertex3f(v0.x() + n0.x(), v0.y() + n0.y(), v0.z() + n0.z()); 
 			glEnd();
 
 			glBegin(GL_LINES);
-			glVertex3f(v1.x, v1.y, v1.z); glVertex3f(v1.x + n1.x, v1.y + n1.y, v1.z + n1.z); 
+			glVertex3f(v1.x(), v1.y(), v1.z()); glVertex3f(v1.x() + n1.x(), v1.y() + n1.y(), v1.z() + n1.z()); 
 			glEnd();
 
 			glBegin(GL_LINES);
-			glVertex3f(v2.x, v2.y, v2.z); glVertex3f(v2.x + n2.x, v2.y + n2.y, v2.z + n2.z); 
+			glVertex3f(v2.x(), v2.y(), v2.z()); glVertex3f(v2.x() + n2.x(), v2.y() + n2.y(), v2.z() + n2.z()); 
 			glEnd();
 		}
 	}
