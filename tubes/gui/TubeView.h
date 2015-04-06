@@ -67,6 +67,9 @@ private:
 					sg_gui::DrawTranslucent,
 					sg_gui::ChangeAlpha
 			>,
+			sg::AcceptsInner<
+					sg::AgentAdded
+			>,
 			sg::ProvidesInner<
 					sg_gui::ChangeAlpha
 			>,
@@ -77,10 +80,14 @@ private:
 
 	public:
 
+		void onInnerSignal(sg::AgentAdded&) {
+
+			sendInner<sg_gui::ChangeAlpha>(0.5);
+		}
+
 		bool filterDown(sg_gui::DrawTranslucent&) {
 
 			glDisable(GL_DEPTH_TEST);
-			sendInner<sg_gui::ChangeAlpha>(0.5);
 
 			return true;
 		}
