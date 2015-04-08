@@ -18,7 +18,8 @@ class TubeView :
 						sg_gui::ChangeAlpha
 				>,
 				sg::PassesUp<
-						sg_gui::ContentChanged
+						sg_gui::ContentChanged,
+						sg_gui::VolumePointSelected
 				>
 		> {
 
@@ -44,7 +45,8 @@ private:
 	class RawScope : public sg::Scope<
 			RawScope,
 			sg::FiltersDown<
-					sg_gui::ChangeAlpha
+					sg_gui::ChangeAlpha,
+					sg_gui::DrawOpaque
 			>,
 			sg::PassesUp<
 					sg_gui::ContentChanged
@@ -55,6 +57,10 @@ private:
 
 		bool filterDown(sg_gui::ChangeAlpha&) { return false; }
 		void unfilterDown(sg_gui::ChangeAlpha&) {}
+
+		// disable z-write for the raw image
+		bool filterDown(sg_gui::DrawOpaque&)   { glDepthMask(GL_FALSE); return true; }
+		void unfilterDown(sg_gui::DrawOpaque&) { glDepthMask(GL_TRUE); }
 	};
 
 	/**
@@ -64,6 +70,7 @@ private:
 	class LabelsScope : public sg::Scope<
 			LabelsScope,
 			sg::FiltersDown<
+					sg_gui::DrawOpaque,
 					sg_gui::DrawTranslucent,
 					sg_gui::ChangeAlpha
 			>,
@@ -71,10 +78,12 @@ private:
 					sg::AgentAdded
 			>,
 			sg::ProvidesInner<
-					sg_gui::ChangeAlpha
+					sg_gui::ChangeAlpha,
+					sg_gui::DrawTranslucent
 			>,
 			sg::PassesUp<
-					sg_gui::ContentChanged
+					sg_gui::ContentChanged,
+					sg_gui::VolumePointSelected
 			>
 	> {
 
@@ -85,17 +94,23 @@ private:
 			sendInner<sg_gui::ChangeAlpha>(0.5);
 		}
 
-		bool filterDown(sg_gui::DrawTranslucent&) {
+		// stop the translucent draw -- we take care of it in opaque draw
+		bool filterDown(sg_gui::DrawTranslucent&) { return false; }
+		void unfilterDown(sg_gui::DrawTranslucent&) {}
 
-			glDisable(GL_DEPTH_TEST);
+		// convert opaque draw into translucent draw
+		bool filterDown(sg_gui::DrawOpaque& s) {
 
-			return true;
+				glEnable(GL_BLEND);
+				sg_gui::DrawTranslucent signal;
+				signal.roi() = s.roi();
+				signal.resolution() = s.resolution();
+				sendInner(signal);
+				glDisable(GL_BLEND);
+				
+				return false;
 		}
-
-		void unfilterDown(sg_gui::DrawTranslucent&) {
-
-			glEnable(GL_DEPTH_TEST);
-		}
+		void unfilterDown(sg_gui::DrawOpaque&) {}
 
 		bool filterDown(sg_gui::ChangeAlpha&) { return false; }
 		void unfilterDown(sg_gui::ChangeAlpha&) {}
