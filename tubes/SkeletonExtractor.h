@@ -21,6 +21,8 @@ public:
 
 private:
 
+	ExplicitVolume<float> downsampleVolume(const ExplicitVolume<unsigned char>& volume);
+
 	TubeStore*  _store;
 };
 
