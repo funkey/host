@@ -1,6 +1,8 @@
 #include <util/Logger.h>
 #include <util/ProgramOptions.h>
 #include "SkeletonExtractor.h"
+#include "Skeletons.h"
+#include "GraphVolumes.h"
 #define WITH_LEMON
 #include <vigra/multi_impex.hxx>
 #include <vigra/multi_resize.hxx>
@@ -24,7 +26,8 @@ SkeletonExtractor::extract() {
 	Volumes volumes;
 	_store->retrieveVolumes(ids, volumes);
 
-	Skeletons skeletons;
+	Skeletons    skeletons;
+	GraphVolumes graphVolumes;
 
 	for (TubeId id : ids) {
 
@@ -42,12 +45,27 @@ SkeletonExtractor::extract() {
 			else
 				downsampled = volumes[id];
 
+			LOG_DEBUG(skeletonextractorlog)
+					<< "original volume has discrete bb " << volumes[id].getDiscreteBoundingBox()
+					<< ", offset " << volumes[id].getOffset() << ", and resolution " << volumes[id].getResolution()
+					<< std::endl;
+
+			LOG_DEBUG(skeletonextractorlog)
+					<< "downsampled volume has discrete bb " << downsampled.getDiscreteBoundingBox()
+					<< ", offset " << downsampled.getOffset() << ", and resolution " << downsampled.getResolution()
+					<< std::endl;
+
 			GraphVolume graph(downsampled);
 
-			std::cout << &graph.graph() << std::endl;
+			LOG_DEBUG(skeletonextractorlog)
+					<< "graph volume has discrete bb " << graph.getDiscreteBoundingBox()
+					<< ", offset " << graph.getOffset() << ", and resolution " << graph.getResolution()
+					<< std::endl;
 
 			Skeletonize skeletonize(graph);
+
 			skeletons.insert(id, skeletonize.getSkeleton());
+			graphVolumes.insert(id, std::move(graph));
 
 		} catch (NoNodeFound& e) {
 
@@ -59,6 +77,7 @@ SkeletonExtractor::extract() {
 	}
 
 	_store->saveSkeletons(skeletons);
+	_store->saveGraphVolumes(graphVolumes);
 }
 
 
@@ -138,7 +157,7 @@ SkeletonExtractor::downsampleVolume(const ExplicitVolume<unsigned char>& volume)
 
 		ExplicitVolume<unsigned char> downsampled(targetSize[0], targetSize[1], targetSize[2]);
 		downsampled.setResolution(targetRes[0], targetRes[1], targetRes[2]);
-		downsampled.setBoundingBox(volume.getBoundingBox());
+		downsampled.setOffset(volume.getOffset());
 
 		// copy volume
 		for (int z = 0; z < targetSize[2]; z++)
