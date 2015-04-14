@@ -71,9 +71,6 @@ ExtractLabels::updateOutputs() {
 		z++;
 	}
 
-	_labelStack->setBoundingBox(_stack->getBoundingBox());
-	_labelStack->setResolution(
-			_stack->getResolutionX(),
-			_stack->getResolutionY(),
-			_stack->getResolutionZ());
+	_labelStack->setResolution(_stack->getResolution());
+	_labelStack->setOffset(_stack->getOffset());
 }

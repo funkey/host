@@ -6,11 +6,7 @@ TubeExtractor::extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& 
 
 	std::map<TubeId, util::box<float,3>> bbs;
 
-	float resX = labels.getResolutionX();
-	float resY = labels.getResolutionY();
-	float resZ = labels.getResolutionZ();
-
-	// get the bounding boxes of all tubes
+	// get the discrete bounding boxes of all tubes
 	for (unsigned int z = 0; z < labels.depth();  z++)
 	for (unsigned int y = 0; y < labels.height(); y++)
 	for (unsigned int x = 0; x < labels.width();  x++) {
@@ -36,12 +32,11 @@ TubeExtractor::extractFrom(ExplicitVolume<int>& labels, const std::set<TubeId>& 
 				continue;
 
 		// set volume properties
-		volumes[id].setBoundingBox(bb*vigra::TinyVector<float, 3>(resX, resY, resZ));
 		volumes[id].setResolution(
 				labels.getResolutionX(),
 				labels.getResolutionY(),
 				labels.getResolutionZ());
-
+		volumes[id].setOffset(labels.getOffset() + bb.min()*labels.getResolution());
 		volumes[id].data() = vigra::MultiArray<3, char>(vigra::Shape3(bb.width(), bb.height(), bb.depth()));
 
 		// copy data

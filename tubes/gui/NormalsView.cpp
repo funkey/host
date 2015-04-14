@@ -48,9 +48,9 @@ NormalsView::updateRecording() {
 			const sg_gui::Point3d&  v0 = _meshes->get(id)->getVertex(triangle.v0);
 			const sg_gui::Point3d&  v1 = _meshes->get(id)->getVertex(triangle.v1);
 			const sg_gui::Point3d&  v2 = _meshes->get(id)->getVertex(triangle.v2);
-			const sg_gui::Vector3d& n0 = 10*_meshes->get(id)->getNormal(triangle.v0);
-			const sg_gui::Vector3d& n1 = 10*_meshes->get(id)->getNormal(triangle.v1);
-			const sg_gui::Vector3d& n2 = 10*_meshes->get(id)->getNormal(triangle.v2);
+			const sg_gui::Vector3d& n0 = 10.0f*_meshes->get(id)->getNormal(triangle.v0);
+			const sg_gui::Vector3d& n1 = 10.0f*_meshes->get(id)->getNormal(triangle.v1);
+			const sg_gui::Vector3d& n2 = 10.0f*_meshes->get(id)->getNormal(triangle.v2);
 
 			glBegin(GL_LINES);
 			glVertex3f(v0.x(), v0.y(), v0.z()); glVertex3f(v0.x() + n0.x(), v0.y() + n0.y(), v0.z() + n0.z()); 

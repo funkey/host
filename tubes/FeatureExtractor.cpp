@@ -1,4 +1,5 @@
 #include <region_features/RegionFeatures.h>
+#include <util/timing.h>
 #include "FeatureExtractor.h"
 
 void
@@ -11,6 +12,8 @@ FeatureExtractor::extractFrom(
 	UTIL_ASSERT_REL(intensities.getResolutionX(), ==, labels.getResolutionX());
 	UTIL_ASSERT_REL(intensities.getResolutionY(), ==, labels.getResolutionY());
 	UTIL_ASSERT_REL(intensities.getResolutionZ(), ==, labels.getResolutionZ());
+
+	UTIL_TIME_METHOD;
 
 	RegionFeatures<3, float, int> regionFeatures(intensities.data(), labels.data());
 
