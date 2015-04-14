@@ -15,14 +15,10 @@ SkeletonView::onSignal(sg_gui::Draw& /*draw*/) {
 	if (!_skeletons)
 		return;
 
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
 	glColor3f(255, 53, 127);
 
 	for (auto& p : *_skeletons)
 		drawSkeleton(p.second);
-
-	glEnable(GL_DEPTH_TEST);
 }
 
 void
