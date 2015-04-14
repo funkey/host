@@ -21,12 +21,7 @@ NormalsView::onSignal(sg_gui::QuerySize& signal) {
 	if (!_meshes)
 		return;
 
-	signal.setSize(
-			util::box<float,2>(
-				_meshes->getBoundingBox().min().x(),
-				_meshes->getBoundingBox().min().y(),
-				_meshes->getBoundingBox().max().x(),
-				_meshes->getBoundingBox().max().y()));
+	signal.setSize(_meshes->getBoundingBox());
 }
 
 void
