@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 		// visualize
 
 		auto tubeView     = std::make_shared<TubeView>();
-		auto controller   = std::make_shared<MeshViewController>(&tubeStore, labels, ids);
+		auto controller   = std::make_shared<MeshViewController>(&tubeStore, labels);
 		auto rotateView   = std::make_shared<RotateView>();
 		auto zoomView     = std::make_shared<ZoomView>(true);
 		auto window       = std::make_shared<sg_gui::Window>("tube viewer");
@@ -144,6 +144,7 @@ int main(int argc, char** argv) {
 		rotateView->add(controller);
 		rotateView->add(rayView);
 
+		controller->loadMeshes(ids);
 		tubeView->setTubeSkeletons(skeletons);
 		tubeView->setRawVolume(intensities);
 		tubeView->setLabelsVolume(labels);

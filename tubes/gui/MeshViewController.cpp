@@ -9,15 +9,18 @@ util::ProgramOption optionCubeSize(
 
 MeshViewController::MeshViewController(
 		TubeStore* tubeStore,
-		std::shared_ptr<ExplicitVolume<float>> labels,
-		TubeIds initialIds) :
+		std::shared_ptr<ExplicitVolume<float>> labels) :
 	_tubeStore(tubeStore),
 	_labels(labels),
-	_meshes(std::make_shared<sg_gui::Meshes>()) {
+	_meshes(std::make_shared<sg_gui::Meshes>()) {}
 
-	// notify other agents
-	for (TubeId id : initialIds)
+void
+MeshViewController::loadMeshes(TubeIds ids) {
+
+	for (TubeId id : ids)
 		addMesh(id);
+
+	send<sg_gui::SetMeshes>(_meshes);
 }
 
 void

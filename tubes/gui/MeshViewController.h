@@ -52,8 +52,9 @@ public:
 
 	MeshViewController(
 			TubeStore*                             tubeStore,
-			std::shared_ptr<ExplicitVolume<float>> labels,
-			TubeIds                                initialIds = TubeIds());
+			std::shared_ptr<ExplicitVolume<float>> labels);
+
+	void loadMeshes(TubeIds ids);
 
 	void onSignal(sg_gui::VolumePointSelected& signal);
 
