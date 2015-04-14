@@ -5,6 +5,7 @@
  */
 
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 #include <util/Logger.h>
 #include <util/ProgramOptions.h>
@@ -76,6 +77,7 @@ int main(int argc, char** argv) {
 
 		// store them in the project file
 
+		boost::filesystem::remove(optionProjectFile.as<std::string>());
 		Hdf5VolumeStore volumeStore(optionProjectFile.as<std::string>());
 
 		volumeStore.saveIntensities(intensities);
