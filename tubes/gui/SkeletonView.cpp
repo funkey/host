@@ -31,12 +31,7 @@ SkeletonView::onSignal(sg_gui::QuerySize& signal) {
 	if (!_skeletons)
 		return;
 
-	signal.setSize(
-			util::box<float,2>(
-				_skeletons->getBoundingBox().min().x(),
-				_skeletons->getBoundingBox().min().y(),
-				_skeletons->getBoundingBox().max().x(),
-				_skeletons->getBoundingBox().max().y()));
+	signal.setSize(_skeletons->getBoundingBox());
 }
 
 void
@@ -47,10 +42,13 @@ SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 
 	for (Skeleton::Graph::EdgeIt e(skeleton.graph()); e != lemon::INVALID; ++e) {
 
-		Skeleton::Position prev;
+		util::point<float,3> prev;
 		bool first = true;
 
 		for (const Skeleton::Position& p : skeleton.segments()[e]) {
+
+			util::point<float,3> real;
+			skeleton.getRealLocation(p[0], p[1], p[2], real.x(), real.y(), real.z());
 
 			if (first) {
 
@@ -60,11 +58,11 @@ SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 
 				glBegin(GL_LINES);
 				glVertex3d(prev[0], prev[1], prev[2]);
-				glVertex3d(p[0], p[1], p[2]);
+				glVertex3d(real[0], real[1], real[2]);
 				glEnd();
 			}
 
-			prev  = p;
+			prev  = real;
 		}
 	}
 }
