@@ -66,10 +66,29 @@ Hdf5TubeStore::saveSkeletons(const Skeletons& skeletons) {
 		_hdfFile.cd_mk(name);
 
 		PositionConverter positionConverter;
-
-		writeGraph(skeleton.graph());
-		writeNodeMap(skeleton.graph(), skeleton.positions(), "positions", positionConverter);
+		writeGraphVolume(skeleton);
 		writeVarLengthEdgeMap(skeleton.graph(), skeleton.segments(), "segments", positionConverter);
+
+		_hdfFile.cd_up();
+	}
+}
+
+void
+Hdf5TubeStore::saveGraphVolumes(const GraphVolumes& graphVolumes) {
+
+	_hdfFile.root();
+	_hdfFile.cd_mk("tubes");
+	_hdfFile.cd_mk("graph_volumes");
+
+	for (auto& p : graphVolumes) {
+
+		TubeId             id          = p.first;
+		const GraphVolume& graphVolume = p.second;
+		std::string        name        = boost::lexical_cast<std::string>(id);
+
+		_hdfFile.cd_mk(name);
+
+		writeGraphVolume(graphVolume);
 
 		_hdfFile.cd_up();
 	}
@@ -124,13 +143,73 @@ Hdf5TubeStore::retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) {
 
 		Skeleton          skeleton;
 		PositionConverter positionConverter;
-
-		readGraph(skeleton.graph());
-		readNodeMap(skeleton.graph(), skeleton.positions(), "positions", positionConverter);
+		readGraphVolume(skeleton);
 		readVarLengthEdgeMap(skeleton.graph(), skeleton.segments(), "segments", positionConverter);
-
 		skeletons.insert(id, std::move(skeleton));
 
 		_hdfFile.cd_up();
 	}
+}
+
+void
+Hdf5TubeStore::retrieveGraphVolumes(const TubeIds& ids, GraphVolumes& graphVolumes) {
+
+	_hdfFile.cd("/tubes/graph_volumes");
+
+	for (TubeId id : ids) {
+
+		LOG_ALL(hdf5storelog) << "reading graph volume for tube " << id << std::endl;
+
+		std::string name = boost::lexical_cast<std::string>(id);
+
+		_hdfFile.cd(name);
+
+		GraphVolume graphVolume;
+		readGraphVolume(graphVolume);
+		graphVolumes.insert(id, std::move(graphVolume));
+
+		_hdfFile.cd_up();
+	}
+}
+
+void
+Hdf5TubeStore::writeGraphVolume(const GraphVolume& graphVolume) {
+
+	PositionConverter positionConverter;
+
+	writeGraph(graphVolume.graph());
+	writeNodeMap(graphVolume.graph(), graphVolume.positions(), "positions", positionConverter);
+
+	vigra::MultiArray<1, float> p(3);
+
+	// resolution
+	p[0] = graphVolume.getResolutionX();
+	p[1] = graphVolume.getResolutionY();
+	p[2] = graphVolume.getResolutionZ();
+	_hdfFile.write("resolution", p);
+
+	// offset
+	p[0] = graphVolume.getOffset().x();
+	p[1] = graphVolume.getOffset().y();
+	p[2] = graphVolume.getOffset().z();
+	_hdfFile.write("offset", p);
+}
+
+void
+Hdf5TubeStore::readGraphVolume(GraphVolume& graphVolume) {
+
+	PositionConverter positionConverter;
+
+	readGraph(graphVolume.graph());
+	readNodeMap(graphVolume.graph(), graphVolume.positions(), "positions", positionConverter);
+
+	vigra::MultiArray<1, float> p(3);
+
+	// resolution
+	_hdfFile.read("resolution", p);
+	graphVolume.setResolution(p[0], p[1], p[2]);
+
+	// offset
+	_hdfFile.read("offset", p);
+	graphVolume.setOffset(p[0], p[1], p[2]);
 }

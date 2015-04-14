@@ -22,29 +22,25 @@ protected:
 				dataset,
 				volume.data());
 
-		vigra::MultiArray<1, float> bb(6);
-		vigra::MultiArray<1, float> res(3);
-
-		// bounding-box
-		bb[0] = volume.getBoundingBox().min().x();
-		bb[1] = volume.getBoundingBox().min().y();
-		bb[2] = volume.getBoundingBox().min().z();
-		bb[3] = volume.getBoundingBox().max().x();
-		bb[4] = volume.getBoundingBox().max().y();
-		bb[5] = volume.getBoundingBox().max().z();
-		_hdfFile.writeAttribute(
-				dataset,
-				"bounding box",
-				bb);
+		vigra::MultiArray<1, float> p(3);
 
 		// resolution
-		res[0] = volume.getResolutionX();
-		res[1] = volume.getResolutionY();
-		res[2] = volume.getResolutionZ();
+		p[0] = volume.getResolutionX();
+		p[1] = volume.getResolutionY();
+		p[2] = volume.getResolutionZ();
 		_hdfFile.writeAttribute(
 				dataset,
 				"resolution",
-				res);
+				p);
+
+		// offset
+		p[0] = volume.getOffset().x();
+		p[1] = volume.getOffset().y();
+		p[2] = volume.getOffset().z();
+		_hdfFile.writeAttribute(
+				dataset,
+				"offset",
+				p);
 	}
 
 private:

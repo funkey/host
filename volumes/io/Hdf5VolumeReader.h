@@ -21,25 +21,21 @@ protected:
 		if (!onlyGeometry)
 			_hdfFile.readAndResize(dataset, volume.data());
 
-		vigra::MultiArray<1, float> bb(6);
-		vigra::MultiArray<1, float> res(3);
-
-		// bounding-box
-		_hdfFile.readAttribute(
-				dataset,
-				"bounding box",
-				bb);
-		volume.setBoundingBox(
-				util::box<float,3>(
-						bb[0], bb[1], bb[2],
-						bb[3], bb[4], bb[5]));
+		vigra::MultiArray<1, float> p(3);
 
 		// resolution
 		_hdfFile.readAttribute(
 				dataset,
 				"resolution",
-				res);
-		volume.setResolution(res[0], res[1], res[2]);
+				p);
+		volume.setResolution(p[0], p[1], p[2]);
+
+		// offset
+		_hdfFile.readAttribute(
+				dataset,
+				"offset",
+				p);
+		volume.setOffset(p[0], p[1], p[2]);
 	}
 
 private:

@@ -4,6 +4,7 @@
 #include "Volumes.h"
 #include "Features.h"
 #include "Skeletons.h"
+#include "GraphVolumes.h"
 
 /**
  * Interface definition for tube stores.
@@ -33,6 +34,11 @@ public:
 	virtual void saveSkeletons(const Skeletons& skeletons) = 0;
 
 	/**
+	 * Store the given tube graph volumes.
+	 */
+	virtual void saveGraphVolumes(const GraphVolumes& graphVolumes) = 0;
+
+	/**
 	 * Get all tube ids that this store offers.
 	 */
 	virtual TubeIds getTubeIds() = 0;
@@ -55,6 +61,12 @@ public:
 	 * property map.
 	 */
 	virtual void retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) = 0;
+
+	/**
+	 * Get the skeletons for the given tube ids and store them in the given 
+	 * property map.
+	 */
+	virtual void retrieveGraphVolumes(const TubeIds& ids, GraphVolumes& graphVolumes) = 0;
 };
 
 #endif // HOST_TUBES_IO_TUBE_STORE_H__

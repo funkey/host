@@ -47,6 +47,11 @@ public:
 	void saveSkeletons(const Skeletons& skeletons) override;
 
 	/**
+	 * Store the given tube graph volumes.
+	 */
+	void saveGraphVolumes(const GraphVolumes& graphVolumes) override;
+
+	/**
 	 * Get all tube ids that this store offers.
 	 */
 	 TubeIds getTubeIds() override;
@@ -69,6 +74,12 @@ public:
 	 * property map.
 	 */
 	void retrieveSkeletons(const TubeIds& ids, Skeletons& skeletons) override;
+
+	/**
+	 * Get the skeletons for the given tube ids and store them in the given 
+	 * property map.
+	 */
+	void retrieveGraphVolumes(const TubeIds& ids, GraphVolumes& graphVolumes) override;
 
 private:
 
@@ -98,6 +109,9 @@ private:
 		}
 
 	};
+
+	void writeGraphVolume(const GraphVolume& graphVolume);
+	void readGraphVolume(GraphVolume& graphVolume);
 
 	vigra::HDF5File _hdfFile;
 };
