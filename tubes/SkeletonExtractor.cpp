@@ -189,8 +189,10 @@ SkeletonExtractor::downsampleVolume(const ExplicitVolume<unsigned char>& volume)
 
 		if (numRegions == 1)
 			return downsampled;
-		else
-			downsampleFactor /= 2;
+
+		downsampleFactor /= 2;
+		if (downsampleFactor == 1)
+			return volume;
 	}
 
 }
