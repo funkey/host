@@ -9,17 +9,17 @@ TubeView::TubeView() :
 	_skeletonView(std::make_shared<SkeletonView>()),
 	_normalsView(std::make_shared<NormalsView>()),
 	_meshView(std::make_shared<sg_gui::MeshView>()),
+	_rawScope(std::make_shared<RawScope>()),
+	_labelsScope(std::make_shared<LabelsScope>()),
 	_rawView(std::make_shared<sg_gui::VolumeView>()),
 	_labelsView(std::make_shared<sg_gui::VolumeView>()),
 	_alpha(1.0) {
 
-	auto rawScope    = std::make_shared<RawScope>();
-	auto labelsScope = std::make_shared<LabelsScope>();
-	rawScope->add(_rawView);
-	labelsScope->add(_labelsView);
+	_rawScope->add(_rawView);
+	_labelsScope->add(_labelsView);
 
-	add(rawScope);
-	add(labelsScope);
+	add(_rawScope);
+	add(_labelsScope);
 	add(_skeletonView);
 	add(_meshView);
 
@@ -62,5 +62,12 @@ TubeView::onSignal(sg_gui::KeyDown& signal) {
 			_alpha = 0;
 
 		sendInner<sg_gui::ChangeAlpha>(_alpha);
+	}
+
+	if (signal.key == sg_gui::keys::L) {
+
+		_rawScope->toggleZBufferWrites();
+		_labelsScope->toggleVisibility();
+		send<sg_gui::ContentChanged>();
 	}
 }

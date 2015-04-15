@@ -14,6 +14,9 @@ class TubeView :
 				sg::Accepts<
 						sg_gui::KeyDown
 				>,
+				sg::Provides<
+						sg_gui::ContentChanged
+				>,
 				sg::ProvidesInner<
 						sg_gui::ChangeAlpha
 				>,
@@ -55,12 +58,20 @@ private:
 
 	public:
 
+		RawScope() : _zBufferWrites(false) {}
+
 		bool filterDown(sg_gui::ChangeAlpha&) { return false; }
 		void unfilterDown(sg_gui::ChangeAlpha&) {}
 
 		// disable z-write for the raw image
-		bool filterDown(sg_gui::DrawOpaque&)   { glDepthMask(GL_FALSE); return true; }
-		void unfilterDown(sg_gui::DrawOpaque&) { glDepthMask(GL_TRUE); }
+		bool filterDown(sg_gui::DrawOpaque&)   { if (!_zBufferWrites) glDepthMask(GL_FALSE); return true; }
+		void unfilterDown(sg_gui::DrawOpaque&) { if (!_zBufferWrites) glDepthMask(GL_TRUE); }
+
+		void toggleZBufferWrites() { _zBufferWrites = !_zBufferWrites; }
+
+	private:
+
+		bool _zBufferWrites;
 	};
 
 	/**
@@ -89,6 +100,8 @@ private:
 
 	public:
 
+		LabelsScope() : _visible(true) {}
+
 		void onInnerSignal(sg::AgentAdded&) {
 
 			sendInner<sg_gui::ChangeAlpha>(0.5);
@@ -100,6 +113,9 @@ private:
 
 		// convert opaque draw into translucent draw
 		bool filterDown(sg_gui::DrawOpaque& s) {
+
+				if (!_visible)
+					return false;
 
 				glEnable(GL_BLEND);
 				sg_gui::DrawTranslucent signal;
@@ -114,12 +130,23 @@ private:
 
 		bool filterDown(sg_gui::ChangeAlpha&) { return false; }
 		void unfilterDown(sg_gui::ChangeAlpha&) {}
+
+		void toggleVisibility() {
+
+			_visible = !_visible;
+		}
+
+	private:
+
+		bool _visible;
 	};
 
 
 	std::shared_ptr<SkeletonView>       _skeletonView;
 	std::shared_ptr<NormalsView>        _normalsView;
 	std::shared_ptr<sg_gui::MeshView>   _meshView;
+	std::shared_ptr<RawScope>           _rawScope;
+	std::shared_ptr<LabelsScope>        _labelsScope;
 	std::shared_ptr<sg_gui::VolumeView> _rawView;
 	std::shared_ptr<sg_gui::VolumeView> _labelsView;
 
