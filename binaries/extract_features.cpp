@@ -20,6 +20,10 @@ util::ProgramOption optionProjectFile(
 		util::_description_text = "The project file to read the label and intensity volume and store the features for each tube.",
 		util::_default_value    = "project.hdf");
 
+util::ProgramOption optionSkeletonsOnly(
+		util::_long_name        = "skeletonsOnly",
+		util::_description_text = "Don't extract other features, only the skeletons of the tubes.");
+
 int main(int argc, char** argv) {
 
 	try {
@@ -40,12 +44,15 @@ int main(int argc, char** argv) {
 
 		Hdf5TubeStore tubeStore(optionProjectFile.as<std::string>());
 
-		// extract and save tube features
+		if (!optionSkeletonsOnly) {
 
-		LOG_USER(logger::out) << "extracting features..." << std::endl;
+			// extract and save tube features
 
-		FeatureExtractor featureExtractor(&tubeStore);
-		featureExtractor.extractFrom(intensities, labels);
+			LOG_USER(logger::out) << "extracting features..." << std::endl;
+
+			FeatureExtractor featureExtractor(&tubeStore);
+			featureExtractor.extractFrom(intensities, labels);
+		}
 
 		// extract and save tube skeletons
 
