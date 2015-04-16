@@ -24,6 +24,17 @@ public:
 	bool insert(TubeId id, T&& value) { return _map.insert(std::make_pair(id, std::forward<T>(value))).second; }
 
 	/**
+	 * Check if an element for the given id exists.
+	 */
+	bool contains(TubeId id) const { return _map.count(id); }
+
+	/**
+	 * Remove the element with the given id. Returns true, if the element was 
+	 * contained.
+	 */
+	bool remove(TubeId id) { return _map.erase(id); }
+
+	/**
 	 * Direct iterator access.
 	 */
 	iterator       begin()       { return _map.begin(); }

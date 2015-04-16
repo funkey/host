@@ -26,8 +26,6 @@ MeshViewController::loadMeshes(TubeIds ids) {
 void
 MeshViewController::onSignal(sg_gui::VolumePointSelected& signal) {
 
-	std::cout << "volume point " << signal.position() << " selected" << std::endl;
-
 	unsigned int x, y, z;
 	_labels->getDiscreteCoordinates(
 			signal.position().x(),
@@ -38,8 +36,6 @@ MeshViewController::onSignal(sg_gui::VolumePointSelected& signal) {
 
 	if (id == 0)
 		return;
-
-	std::cout << "selected tube id is " << id << std::endl;
 
 	if (_meshes->contains(id))
 		removeMesh(id);

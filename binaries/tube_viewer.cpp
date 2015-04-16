@@ -6,6 +6,7 @@
 #include <imageprocessing/ExplicitVolume.h>
 #include <tubes/gui/TubeView.h>
 #include <tubes/gui/MeshViewController.h>
+#include <tubes/gui/SkeletonViewController.h>
 #include <tubes/io/Hdf5TubeStore.h>
 #include <volumes/io/Hdf5VolumeStore.h>
 #include <sg_gui/RotateView.h>
@@ -23,7 +24,7 @@ util::ProgramOption optionProjectFile(
 util::ProgramOption optionTubeId(
 		util::_long_name        = "id",
 		util::_short_name       = "i",
-		util::_description_text = "The ids of the tubes to show (separated by a single non-decimal character). If not given, all tubes are shown.");
+		util::_description_text = "The ids of the tubes to show initially (separated by a single non-decimal character). If set to 'all', all tubes are shown.");
 
 class RayView :
 		public sg::Agent<
@@ -96,11 +97,11 @@ int main(int argc, char** argv) {
 
 		TubeIds ids;
 
-		if (!optionTubeId) {
+		if (optionTubeId && optionTubeId.as<std::string>() == "all") {
 
 			ids = tubeStore.getTubeIds();
 
-		} else {
+		} else if (optionTubeId) {
 
 			std::stringstream ss(optionTubeId.as<std::string>());
 
@@ -116,11 +117,6 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		// get skeletons
-
-		auto skeletons = std::make_shared<Skeletons>();
-		tubeStore.retrieveSkeletons(ids, *skeletons);
-
 		// get intensities and labels
 
 		auto intensities = std::make_shared<ExplicitVolume<float>>();
@@ -131,8 +127,9 @@ int main(int argc, char** argv) {
 
 		// visualize
 
-		auto tubeView     = std::make_shared<TubeView>();
-		auto controller   = std::make_shared<MeshViewController>(&tubeStore, labels);
+		auto tubeView           = std::make_shared<TubeView>();
+		auto meshController     = std::make_shared<MeshViewController>(&tubeStore, labels);
+		auto skeletonController = std::make_shared<SkeletonViewController>(&tubeStore, labels);
 		auto rotateView   = std::make_shared<RotateView>();
 		auto zoomView     = std::make_shared<ZoomView>(true);
 		auto window       = std::make_shared<sg_gui::Window>("tube viewer");
@@ -141,11 +138,12 @@ int main(int argc, char** argv) {
 		window->add(zoomView);
 		zoomView->add(rotateView);
 		rotateView->add(tubeView);
-		rotateView->add(controller);
+		rotateView->add(meshController);
+		rotateView->add(skeletonController);
 		rotateView->add(rayView);
 
-		controller->loadMeshes(ids);
-		tubeView->setTubeSkeletons(skeletons);
+		meshController->loadMeshes(ids);
+		skeletonController->loadSkeletons(ids);
 		tubeView->setRawVolume(intensities);
 		tubeView->setLabelsVolume(labels);
 

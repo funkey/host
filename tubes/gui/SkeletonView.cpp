@@ -31,6 +31,12 @@ SkeletonView::onSignal(sg_gui::QuerySize& signal) {
 }
 
 void
+SkeletonView::onSignal(SetSkeletons& signal) {
+
+	setSkeletons(signal.getSkeletons());
+}
+
+void
 SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 
 	glLineWidth(2.0);
