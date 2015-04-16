@@ -39,13 +39,32 @@ Hdf5GraphWriter::writeGraph(const Hdf5GraphWriter::Graph& graph) {
 bool
 Hdf5GraphWriter::nodeIdsConsequtive(const Hdf5GraphWriter::Graph& graph) {
 
-	int i = 0;
+	int i = -1;
+	bool ascending;
+
 	for (Graph::NodeIt node(graph); node != lemon::INVALID; ++node) {
+
+		if (i == -1) {
+
+			if (graph.id(node) != 0) {
+
+				i = graph.id(node);
+				ascending = false;
+
+			} else {
+
+				i = 0;
+				ascending = true;
+			}
+		}
 
 		if (graph.id(node) != i)
 			return false;
 
-		i++;
+		if (ascending)
+			i++;
+		else
+			i--;
 	}
 
 	return true;
