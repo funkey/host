@@ -9,6 +9,23 @@ class Hdf5GraphWriter {
 
 public:
 
+	/**
+	 * Converts numeric types into array-like objects for HDF5 storage.
+	 */
+	template <typename T>
+	struct DefaultConverter {
+
+		typedef T ArrayValueType;
+		static const int ArraySize = 1;
+
+		vigra::ArrayVector<T> operator()(const T& t) const {
+
+			vigra::ArrayVector<T> array(1);
+			array[0] = t;
+			return array;
+		}
+	};
+
 	typedef lemon::ListGraph Graph;
 
 	template <typename ValueType>
@@ -42,12 +59,12 @@ public:
 	 *
 	 *     the conversion operator
 	 */
-	template <typename ValueType, typename Converter>
+	template <typename ValueType, typename Converter = DefaultConverter<ValueType>>
 	void writeNodeMap(
 			const Graph&              graph,
 			const NodeMap<ValueType>& map,
 			std::string               name,
-			const Converter&          converter) {
+			const Converter&          converter = Converter()) {
 
 		typedef vigra::ArrayVector<typename Converter::ArrayValueType> ArrayType;
 

@@ -8,6 +8,21 @@ class Hdf5GraphReader {
 
 public:
 
+	/**
+	 * Converts numeric types into array-like objects for HDF5 storage.
+	 */
+	template <typename T>
+	struct DefaultConverter {
+
+		typedef T ArrayValueType;
+		static const int ArraySize = 1;
+
+		T operator()(const vigra::ArrayVectorView<T>& array) const {
+
+			return array[0];
+		}
+	};
+
 	typedef lemon::ListGraph Graph;
 
 	template <typename ValueType>
@@ -41,12 +56,12 @@ public:
 	 *
 	 *     the conversion operator
 	 */
-	template <typename ValueType, typename Converter>
+	template <typename ValueType, typename Converter = DefaultConverter<ValueType>>
 	void readNodeMap(
 			const Graph&        graph,
 			NodeMap<ValueType>& map,
 			std::string         name,
-			const Converter&    converter) {
+			const Converter&    converter = Converter()) {
 
 		typedef vigra::ArrayVector<typename Converter::ArrayValueType> ArrayType;
 
@@ -57,11 +72,10 @@ public:
 					name,
 					values);
 
-		std::size_t i = 0;
 		for (Graph::NodeIt node(graph); node != lemon::INVALID; ++node) {
 
-			map[node] = converter(values.subarray(i, i + Converter::ArraySize));
-			i += Converter::ArraySize;
+			std::size_t i = graph.id(node);
+			map[node] = converter(values.subarray(i*Converter::ArraySize, (i + 1)*Converter::ArraySize));
 		}
 	}
 
