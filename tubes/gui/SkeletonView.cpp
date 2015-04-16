@@ -44,27 +44,20 @@ SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 
 	for (Skeleton::Graph::EdgeIt e(skeleton.graph()); e != lemon::INVALID; ++e) {
 
-		util::point<float,3> prev;
-		bool first = true;
+		Skeleton::Node u = skeleton.graph().u(e);
+		Skeleton::Node v = skeleton.graph().v(e);
 
-		for (const Skeleton::Position& p : skeleton.segments()[e]) {
+		Skeleton::Position pu = skeleton.positions()[u];
+		Skeleton::Position pv = skeleton.positions()[v];
 
-			util::point<float,3> real;
-			skeleton.getRealLocation(p[0], p[1], p[2], real.x(), real.y(), real.z());
+		util::point<float,3> ru;
+		util::point<float,3> rv;
+		skeleton.getRealLocation(pu, ru);
+		skeleton.getRealLocation(pv, rv);
 
-			if (first) {
-
-				first = false;
-
-			} else {
-
-				glBegin(GL_LINES);
-				glVertex3d(prev[0], prev[1], prev[2]);
-				glVertex3d(real[0], real[1], real[2]);
-				glEnd();
-			}
-
-			prev  = real;
-		}
+		glBegin(GL_LINES);
+		glVertex3d(ru.x(), ru.y(), ru.z());
+		glVertex3d(rv.x(), rv.y(), rv.z());
+		glEnd();
 	}
 }
