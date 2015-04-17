@@ -7,23 +7,6 @@ namespace host {
 } // namespace host
 
 std::ostream&
-operator<<(std::ostream& os, const host::Graph& graph) {
-
-	host::LoggingState::setLoggingGraph(&graph);
-	return os;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const host::Arc& arc) {
-
-	const host::Graph& graph = *host::LoggingState::getLoggingGraph();
-
-	// arcs are tuples of nodes
-	os << "(" << graph.id(graph.source(arc)) << ", " << graph.id(graph.target(arc)) << ")";
-	return os;
-}
-
-std::ostream&
 operator<<(std::ostream& os, const std::vector<host::Arc>& arcs) {
 
 	bool first = true;
@@ -39,16 +22,6 @@ operator<<(std::ostream& os, const std::vector<host::Arc>& arcs) {
 	}
 	os << "]";
 
-	return os;
-}
-
-std::ostream&
-operator<<(std::ostream& os, const host::Edge& edge) {
-
-	const host::Graph& graph = *host::LoggingState::getLoggingGraph();
-
-	// edges are sets of nodes
-	os << "{" << graph.id(graph.source(edge)) << ", " << graph.id(graph.target(edge)) << "}";
 	return os;
 }
 

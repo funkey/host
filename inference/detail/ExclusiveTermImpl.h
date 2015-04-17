@@ -218,15 +218,15 @@ private:
 	Lambdas _lambdas;
 };
 
-} // namespace detail
-} // namespace host
-
 template <typename EdgeType>
-std::ostream& operator<<(std::ostream& out, const host::detail::ExclusiveTermImpl<EdgeType>& term) {
+std::ostream& operator<<(std::ostream& out, const ExclusiveTermImpl<EdgeType>& term) {
 
 	out << term.edge1() << " -- " << term.edge2() << "\t" << term.lambdas();
 	return out;
 }
+
+} // namespace detail
+} // namespace host
 
 #endif // HOST_INFERENCE_DETAIL_EXCLUSIVE_TERM_IMPL_H__
 

@@ -3,9 +3,9 @@
 
 #include "WeightedGraphGenerator.h"
 
-std::istream& operator>>(std::istream& is, host::ArcType& type);
-
 namespace host {
+
+std::istream& operator>>(std::istream& is, host::ArcType& type);
 
 class WeightedGraphReader : public WeightedGraphGenerator {
 

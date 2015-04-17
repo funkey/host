@@ -54,7 +54,7 @@ HostSearch::find(
 	LOG_ALL(hostsearchlog)
 			<< "final weights are:" << _graph << std::endl;
 	for (host::Graph::ArcIt arc(_graph); arc != lemon::INVALID; ++arc)
-		LOG_ALL(hostsearchlog) << arc << ": " << _currentWeights[arc] << std::endl;
+		LOG_ALL(hostsearchlog) << (Arc)arc << ": " << _currentWeights[arc] << std::endl;
 
 	LOG_DEBUG(hostsearchlog)
 			<< "mst is:" << _graph << std::endl;

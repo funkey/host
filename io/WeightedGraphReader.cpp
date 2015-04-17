@@ -3,6 +3,8 @@
 #include <graph/Logging.h>
 #include "WeightedGraphReader.h"
 
+namespace host {
+
 std::istream& operator>>(std::istream& is, host::ArcType& type) {
 
 	unsigned int i;
@@ -11,8 +13,6 @@ std::istream& operator>>(std::istream& is, host::ArcType& type) {
 
 	return is;
 }
-
-namespace host {
 
 void
 WeightedGraphReader::fill(
