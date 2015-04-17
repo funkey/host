@@ -36,9 +36,9 @@ NormalsView::updateRecording() {
 
 	foreach (unsigned int id, _meshes->getMeshIds()) {
 
-		const std::vector<Triangle>& triangles = _meshes->get(id)->getTriangles();
+		const std::vector<sg_gui::Triangle>& triangles = _meshes->get(id)->getTriangles();
 
-		foreach (const Triangle& triangle, triangles) {
+		foreach (const sg_gui::Triangle& triangle, triangles) {
 
 			const sg_gui::Point3d&  v0 = _meshes->get(id)->getVertex(triangle.v0);
 			const sg_gui::Point3d&  v1 = _meshes->get(id)->getVertex(triangle.v1);
