@@ -90,6 +90,11 @@ SkeletonView::drawSkeleton(const Skeleton& skeleton) {
 	glLineWidth(2.0);
 	glEnable(GL_LINE_SMOOTH);
 
+	GLfloat specular[] = {0.2, 0.2, 0.2, 1.0};
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
+	GLfloat shininess[] = {0.2, 0.2, 0.2, 1.0};
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+
 	for (Skeleton::Graph::EdgeIt e(skeleton.graph()); e != lemon::INVALID; ++e) {
 
 		Skeleton::Node u = skeleton.graph().u(e);
