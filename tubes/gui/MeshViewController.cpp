@@ -37,6 +37,8 @@ MeshViewController::onSignal(sg_gui::VolumePointSelected& signal) {
 	if (id == 0)
 		return;
 
+	std::cout << "showing tube with id " << id << std::endl;
+
 	if (_meshes->contains(id))
 		removeMesh(id);
 	else
