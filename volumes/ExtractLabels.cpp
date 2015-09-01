@@ -42,23 +42,26 @@ ExtractLabels::updateOutputs() {
 
 		int k = optionKLargestComponents;
 
+		// sizes: 0-indexed components
 		std::vector<std::pair<size_t,int>> sizes(numComponents, std::make_pair(0, 0));
+
 		for (auto& v : gtLabels)
 			if (v != 0)
-				sizes[v].first++;
+				sizes[v - 1].first++;
 		for (int i = 0; i < numComponents; i++)
 			sizes[i].second = i;
 		std::sort(sizes.rbegin(), sizes.rend());
 
+		// selected: 0-indexed flag per component
 		std::vector<bool> selected(numComponents, false);
 		for (int i = 0; i < numComponents; i++) {
 
 			if (i < k)
-				std::cout << "accepting component " << sizes[i].second << std::endl;
+				std::cout << "accepting component " << (sizes[i].second + 1) << std::endl;
 			selected[sizes[i].second] = (i < k);
 		}
 		for (auto& v : gtLabels)
-			if (!selected[v])
+			if (v > 0 && !selected[v - 1])
 				v = 0;
 
 		std::cout << "selected " << std::min(k, numComponents) << " components" << std::endl;
