@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
 		ExplicitVolume<float> intensities(*intensityStack);
 		ExplicitVolume<int>   labels(*labelStack);
 
+		intensities.normalize();
+
 		// store them in the project file
 
 		boost::filesystem::remove(optionProjectFile.as<std::string>());
