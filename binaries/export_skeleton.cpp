@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
 			// nodes (number of)
 
 			if (vtk)
-				skeletonfile << "POINT " << numNodes << " float" << std::endl;
+				skeletonfile << "POINTS " << numNodes << " float" << std::endl;
 			else
 				skeletonfile << numNodes << std::endl;
 
@@ -102,10 +102,13 @@ int main(int argc, char** argv) {
 					skeletonfile
 							<< skeleton.graph().id(node) << "\t";
 
+				util::point<float, 3> pos = skeleton.positions()[node];
+				pos = pos*skeleton.getResolution() + skeleton.getOffset();
+
 				skeletonfile
-						<< skeleton.positions()[node].x() << "\t"
-						<< skeleton.positions()[node].y() << "\t"
-						<< skeleton.positions()[node].z() << std::endl;
+						<< pos.x() << " "
+						<< pos.y() << " "
+						<< pos.z() << std::endl;
 			}
 
 			if (vtk) {
@@ -118,7 +121,7 @@ int main(int argc, char** argv) {
 
 			for (Skeleton::Graph::EdgeIt edge(skeleton.graph()); edge != lemon::INVALID; ++edge)
 				skeletonfile
-						<< skeleton.graph().id(skeleton.graph().u(edge)) << "\t"
+						<< skeleton.graph().id(skeleton.graph().u(edge)) << " "
 						<< skeleton.graph().id(skeleton.graph().v(edge)) << std::endl;
 
 			// node diameters (node d)
@@ -132,9 +135,7 @@ int main(int argc, char** argv) {
 			for (int nodeId = 0; nodeId < numNodes; nodeId++) {
 
 				Skeleton::Graph::Node node = skeleton.graph().nodeFromId(nodeId);
-				skeletonfile
-						<< skeleton.graph().id(node) << "\t"
-						<< skeleton.diameters()[node] << std::endl;
+				skeletonfile << skeleton.diameters()[node] << std::endl;
 			}
 		}
 
