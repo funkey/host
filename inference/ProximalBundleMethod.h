@@ -1,7 +1,7 @@
 #ifndef HOST_INFERENCE_PROXIMAL_BUNDLE_METHOD_H__
 #define HOST_INFERENCE_PROXIMAL_BUNDLE_METHOD_H__
 
-#include <gurobi_c++.h>
+//#include <gurobi_c++.h>
 #include <util/exceptions.h>
 #include <util/Logger.h>
 
@@ -65,10 +65,10 @@ public:
 
 		operator double() const {
 
-			if (_positive)
-				return GRB_INFINITY;
-			else
-				return -GRB_INFINITY;
+			//if (_positive)
+				//return GRB_INFINITY;
+			//else
+				//return -GRB_INFINITY;
 		}
 
 		InfiniteValue operator-() const {
@@ -216,11 +216,11 @@ private:
 	std::vector<double> _optimalGradient;
 	double              _optimalEps;
 
-	GRBEnv      _env;
-	GRBModel    _model;
-	GRBVar*     _variables;
-	GRBVar      _slack;
-	GRBQuadExpr _objective;
+	//GRBEnv      _env;
+	//GRBModel    _model;
+	//GRBVar*     _variables;
+	//GRBVar      _slack;
+	//GRBQuadExpr _objective;
 
 	Status _status;
 };
@@ -256,27 +256,27 @@ _gradient_tp1(numDims, 0),
 _optimalPosition(_initialPosition),
 _optimalValue(0),
 _optimalEps(-1) /* not started, yet */,
-_model(_env),
+//_model(_env),
 _status(NotStarted) {
 
-	_model.getEnv().set(GRB_IntParam_OutputFlag, 0);
+	//_model.getEnv().set(GRB_IntParam_OutputFlag, 0);
 
-	LOG_DEBUG(proxbundlemethodlog) << "adding variables" << std::endl;
+	//LOG_DEBUG(proxbundlemethodlog) << "adding variables" << std::endl;
 
-	// add one variable for each dimension
-	_variables = _model.addVars(_numDims, GRB_CONTINUOUS);
+	//// add one variable for each dimension
+	//_variables = _model.addVars(_numDims, GRB_CONTINUOUS);
 
-	// add the slack variable
-	_slack = _model.addVar(-GRB_INFINITY, GRB_INFINITY, 0, GRB_CONTINUOUS);
+	//// add the slack variable
+	//_slack = _model.addVar(-GRB_INFINITY, GRB_INFINITY, 0, GRB_CONTINUOUS);
 
-	_model.update();
+	//_model.update();
 }
 
 template <typename ValueGradientCallback>
 ProximalBundleMethod<ValueGradientCallback>::~ProximalBundleMethod() {
 
-	if (_variables)
-		delete[] _variables;
+	//if (_variables)
+		//delete[] _variables;
 }
 
 template <typename ValueGradientCallback>
@@ -284,8 +284,8 @@ template <typename LowerBoundType, typename UpperBoundType>
 void
 ProximalBundleMethod<ValueGradientCallback>::setVariableBound(unsigned int i, LowerBoundType lb, UpperBoundType ub) {
 
-	_variables[i].set(GRB_DoubleAttr_LB, lb);
-	_variables[i].set(GRB_DoubleAttr_UB, ub);
+	//_variables[i].set(GRB_DoubleAttr_LB, lb);
+	//_variables[i].set(GRB_DoubleAttr_UB, ub);
 }
 
 template <typename ValueGradientCallback>
@@ -293,8 +293,8 @@ template <typename IteratorType>
 void
 ProximalBundleMethod<ValueGradientCallback>::setInitialPosition(IteratorType positionBegin, IteratorType positionEnd) {
 
-	std::copy(positionBegin, positionEnd, _initialPosition.begin());
-	std::copy(positionBegin, positionEnd, _proxCenter_t.begin());
+	//std::copy(positionBegin, positionEnd, _initialPosition.begin());
+	//std::copy(positionBegin, positionEnd, _proxCenter_t.begin());
 }
 
 /**
@@ -312,179 +312,179 @@ template <typename IteratorType>
 void
 ProximalBundleMethod<ValueGradientCallback>::addInitialHyperplane(IteratorType aBegin, IteratorType aEnd, double b) {
 
-	if (aEnd - aBegin != _numDims)
-		UTIL_THROW_EXCEPTION(
-				UsageError,
-				"gradient of initial hyperplane has wrong dimensions: "
-				<< (aEnd - aBegin) << ", should be "
-				<< _numDims << std::endl);
+	//if (aEnd - aBegin != _numDims)
+		//UTIL_THROW_EXCEPTION(
+				//UsageError,
+				//"gradient of initial hyperplane has wrong dimensions: "
+				//<< (aEnd - aBegin) << ", should be "
+				//<< _numDims << std::endl);
 
-	_A.push_back(std::vector<double>(aEnd - aBegin));
-	std::copy(aBegin, aEnd, _A.rbegin()->begin());
+	//_A.push_back(std::vector<double>(aEnd - aBegin));
+	//std::copy(aBegin, aEnd, _A.rbegin()->begin());
 
-	_b.push_back(b);
+	//_b.push_back(b);
 }
 
 template <typename ValueGradientCallback>
 bool
 ProximalBundleMethod<ValueGradientCallback>::optimize() {
 
-	_previous_gradient.clear();
+	//_previous_gradient.clear();
 
-	_lambda_tp1            = _initialPosition;
-	_previous_proxCenter_t = _initialPosition;
+	//_lambda_tp1            = _initialPosition;
+	//_previous_proxCenter_t = _initialPosition;
 
-	LOG_DEBUG(proxbundlemethodlog) << "adding " << _A.size() << " initial constraints" << std::endl;
+	//LOG_DEBUG(proxbundlemethodlog) << "adding " << _A.size() << " initial constraints" << std::endl;
 
-	// add the initial constraints Ax - b ≤ ξ
+	//// add the initial constraints Ax - b ≤ ξ
 
-	rows_type::const_iterator           row;
-	std::vector<double>::const_iterator b;
-	for (row = _A.begin(), b = _b.begin(); row != _A.end(); row++, b++) {
+	//rows_type::const_iterator           row;
+	//std::vector<double>::const_iterator b;
+	//for (row = _A.begin(), b = _b.begin(); row != _A.end(); row++, b++) {
 
-		GRBLinExpr expr;
-		expr.addTerms(&(*row)[0], _variables, row->size());
-		expr -= _slack;
+		//GRBLinExpr expr;
+		//expr.addTerms(&(*row)[0], _variables, row->size());
+		//expr -= _slack;
 
-		_model.addConstr(expr, GRB_GREATER_EQUAL, -(*b));
-	}
+		//_model.addConstr(expr, GRB_GREATER_EQUAL, -(*b));
+	//}
 
-	_model.update();
+	//_model.update();
 
-	LOG_DEBUG(proxbundlemethodlog) << "computing first value and gradient" << std::endl;
+	//LOG_DEBUG(proxbundlemethodlog) << "computing first value and gradient" << std::endl;
 
-	// compute value ξ' and gradient g' of original objective
-	CallbackResponse response = _valueGradientCallback(_initialPosition, _value_tp1, _gradient_tp1);
+	//// compute value ξ' and gradient g' of original objective
+	//CallbackResponse response = _valueGradientCallback(_initialPosition, _value_tp1, _gradient_tp1);
 
-	if (response == Stop) {
+	//if (response == Stop) {
 
-		_status = Stopped;
-		return false;
-	}
+		//_status = Stopped;
+		//return false;
+	//}
 
-	// set prox center and initialize objective
-	updateProxCenter(_initialPosition, _value_tp1);
+	//// set prox center and initialize objective
+	//updateProxCenter(_initialPosition, _value_tp1);
 
-	// set initial hyperplane
-	addHyperplane(_initialPosition, _value_tp1, _gradient_tp1);
+	//// set initial hyperplane
+	//addHyperplane(_initialPosition, _value_tp1, _gradient_tp1);
 
-	for (_iteration = 0; _iteration < _numIterations; _iteration++) {
+	//for (_iteration = 0; _iteration < _numIterations; _iteration++) {
 
-		LOG_DEBUG(proxbundlemethodlog) << "iteration #" << _iteration << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "iteration #" << _iteration << std::endl;
 
-		try {
+		//try {
 
-			_lambda_t = _lambda_tp1;
+			//_lambda_t = _lambda_tp1;
 
-			solveQP(_lambda_tp1, _bundleValue_tp1, _qpValue_tp1);
+			//solveQP(_lambda_tp1, _bundleValue_tp1, _qpValue_tp1);
 
-		} catch (BundleCannotSolveQpException e) {
+		//} catch (BundleCannotSolveQpException e) {
 
-			LOG_DEBUG(proxbundlemethodlog) << "couldn't solve the QP" << std::endl;
-			_status = Error;
+			//LOG_DEBUG(proxbundlemethodlog) << "couldn't solve the QP" << std::endl;
+			//_status = Error;
 
-			return false;
-		}
+			//return false;
+		//}
 
-		LOG_DEBUG(proxbundlemethodlog) << "computing value and gradient at current λ^(t+1)" << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "computing value and gradient at current λ^(t+1)" << std::endl;
 
-		// L(λ^(t+1)) (and the gradient, to be used in the next iteration)
-		response = _valueGradientCallback(_lambda_tp1, _value_tp1, _gradient_tp1);
+		//// L(λ^(t+1)) (and the gradient, to be used in the next iteration)
+		//response = _valueGradientCallback(_lambda_tp1, _value_tp1, _gradient_tp1);
 
-		// terminated?
-		_eps_t = _qpValue_tp1 - _proxValue_t;
+		//// terminated?
+		//_eps_t = _qpValue_tp1 - _proxValue_t;
 
-		// serious step?
-		_improvement = _value_tp1 - _proxValue_t;
+		//// serious step?
+		//_improvement = _value_tp1 - _proxValue_t;
 
-		// note: we need to log before we update the model again
-		getModelLog();
+		//// note: we need to log before we update the model again
+		//getModelLog();
 
-		// we found a horizontal plane -- we can stop searching further
-		if (countNonzero(_gradient_tp1) == 0) {
+		//// we found a horizontal plane -- we can stop searching further
+		//if (countNonzero(_gradient_tp1) == 0) {
 
-			LOG_DEBUG(proxbundlemethodlog) << "Encountered zero gradient -- exact optimum found!" << std::endl;
-			LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
-			LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "Encountered zero gradient -- exact optimum found!" << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
 
-			_optimalPosition = _lambda_tp1;
-			_optimalValue    = _value_tp1;
-			_optimalGradient = _gradient_tp1;
-			_optimalEps      = 0; // hurray!
-			_status          = ExactOptimiumFound;
+			//_optimalPosition = _lambda_tp1;
+			//_optimalValue    = _value_tp1;
+			//_optimalGradient = _gradient_tp1;
+			//_optimalEps      = 0; // hurray!
+			//_status          = ExactOptimiumFound;
 
-			log();
+			//log();
 
-			return true;
-		}
+			//return true;
+		//}
 
-		if (_eps_t < _eps) {
+		//if (_eps_t < _eps) {
 
-			LOG_DEBUG(proxbundlemethodlog) << "converged to desired precision (" << _eps_t << " < " << _eps << ")" << std::endl;
-			LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
-			LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
-			LOG_DEBUG(proxbundlemethodlog) << "\teps_t      = " << _eps_t << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "converged to desired precision (" << _eps_t << " < " << _eps << ")" << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "\teps_t      = " << _eps_t << std::endl;
 
-			_optimalPosition = _lambda_tp1;
-			_optimalValue    = _value_tp1;
-			_optimalGradient = _gradient_tp1;
-			_optimalEps      = _eps_t;
-			_status          = Converged;
+			//_optimalPosition = _lambda_tp1;
+			//_optimalValue    = _value_tp1;
+			//_optimalGradient = _gradient_tp1;
+			//_optimalEps      = _eps_t;
+			//_status          = Converged;
 
-			log();
+			//log();
 
-			return true;
-		}
+			//return true;
+		//}
 
-		if (response == Stop) {
+		//if (response == Stop) {
 
-			LOG_DEBUG(proxbundlemethodlog) << "Got stop response." << std::endl;
-			LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
-			LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "Got stop response." << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
 
-			_optimalPosition = _lambda_tp1;
-			_optimalValue    = _value_tp1;
-			_optimalGradient = _gradient_tp1;
-			_optimalEps      = _eps_t;
-			_status          = Stopped;
+			//_optimalPosition = _lambda_tp1;
+			//_optimalValue    = _value_tp1;
+			//_optimalGradient = _gradient_tp1;
+			//_optimalEps      = _eps_t;
+			//_status          = Stopped;
 
-			log();
+			//log();
 
-			return false;
-		}
+			//return false;
+		//}
 
-		// try to add new hyperplane
-		bool added = addHyperplane(_lambda_tp1, _value_tp1, _gradient_tp1);
+		//// try to add new hyperplane
+		//bool added = addHyperplane(_lambda_tp1, _value_tp1, _gradient_tp1);
 
-		// if the improvement is better than a multiple of the eps_t
-		// OR
-		// the current hyperplane is already part of the bundle we change the prox
-		// center to guarantee termination
-		if (!added || _improvement > _rho*_eps_t) {
+		//// if the improvement is better than a multiple of the eps_t
+		//// OR
+		//// the current hyperplane is already part of the bundle we change the prox
+		//// center to guarantee termination
+		//if (!added || _improvement > _rho*_eps_t) {
 
-			if (_improvement < 0) {
+			//if (_improvement < 0) {
 
-				LOG_DEBUG(proxbundlemethodlog) << "################ WARNING #####################" << std::endl;
-				LOG_DEBUG(proxbundlemethodlog) << "perform serious step with negative improvement" << std::endl;
-				LOG_DEBUG(proxbundlemethodlog) << "##############################################" << std::endl;
-			}
+				//LOG_DEBUG(proxbundlemethodlog) << "################ WARNING #####################" << std::endl;
+				//LOG_DEBUG(proxbundlemethodlog) << "perform serious step with negative improvement" << std::endl;
+				//LOG_DEBUG(proxbundlemethodlog) << "##############################################" << std::endl;
+			//}
 
-			LOG_DEBUG(proxbundlemethodlog) << "serious step performed -- update prox center" << std::endl;
+			//LOG_DEBUG(proxbundlemethodlog) << "serious step performed -- update prox center" << std::endl;
 
-			updateProxCenter(_lambda_tp1, _value_tp1);
-		}
+			//updateProxCenter(_lambda_tp1, _value_tp1);
+		//}
 
-		log();
+		//log();
 
-		//LOG_DEBUG(proxbundlemethodlog) << "current position is " << _lambda_tp1 << std::endl;
-		//LOG_DEBUG(proxbundlemethodlog) << "value is " << _value_tp1 << ", gradient is " << gradient_tp1 << std::endl;
-		LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
-		LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
-		LOG_DEBUG(proxbundlemethodlog) << "\teps_t      = " << _eps_t << std::endl;
-	}
+		////LOG_DEBUG(proxbundlemethodlog) << "current position is " << _lambda_tp1 << std::endl;
+		////LOG_DEBUG(proxbundlemethodlog) << "value is " << _value_tp1 << ", gradient is " << gradient_tp1 << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "\tℒ(λ^(t+1)) = " << _bundleValue_tp1 << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "\tL(λ^(t+1)) = " << _value_tp1 << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "\teps_t      = " << _eps_t << std::endl;
+	//}
 
-	LOG_DEBUG(proxbundlemethodlog) << "Maximum number of iterations reached -- aborting." << std::endl;
-	_status = IterationsExceeded;
+	//LOG_DEBUG(proxbundlemethodlog) << "Maximum number of iterations reached -- aborting." << std::endl;
+	//_status = IterationsExceeded;
 
 	return false;
 }
@@ -514,93 +514,93 @@ template <typename ValueGradientCallback>
 void
 ProximalBundleMethod<ValueGradientCallback>::setObjective() {
 
-	// add the objective
-	_objective = GRBQuadExpr(_slack);
+	//// add the objective
+	//_objective = GRBQuadExpr(_slack);
 
-	// l2 regularizer on current λ
-	for (unsigned int i = 0; i < _numDims; i++) {
+	//// l2 regularizer on current λ
+	//for (unsigned int i = 0; i < _numDims; i++) {
 
-		// create λ_t - λ_t+1
-		GRBLinExpr diff = _proxCenter_t[i] - _variables[i];
+		//// create λ_t - λ_t+1
+		//GRBLinExpr diff = _proxCenter_t[i] - _variables[i];
 
-		// square it, multiply with regularizer weight
-		GRBQuadExpr square = diff*diff*_regularizerWeight;
+		//// square it, multiply with regularizer weight
+		//GRBQuadExpr square = diff*diff*_regularizerWeight;
 
-		_objective -= square;
-	}
+		//_objective -= square;
+	//}
 
-	_model.setObjective(_objective, GRB_MAXIMIZE);
-	_model.update();
+	//_model.setObjective(_objective, GRB_MAXIMIZE);
+	//_model.update();
 }
 
 template <typename ValueGradientCallback>
 void
 ProximalBundleMethod<ValueGradientCallback>::updateProxCenter(const std::vector<double>& position, double value) {
 
-	_proxCenter_t = position;
-	_proxValue_t  = value;
+	//_proxCenter_t = position;
+	//_proxValue_t  = value;
 
-	setObjective();
+	//setObjective();
 }
 
 template <typename ValueGradientCallback>
 bool
 ProximalBundleMethod<ValueGradientCallback>::addHyperplane(const std::vector<double>& position, double value, const std::vector<double>& gradient_tp1) {
 
-	// TODO:
-	// • search in all planes, not just the last one
-	if (_previous_gradient.size() > 0 && std::equal(_previous_gradient.begin(), _previous_gradient.end(), gradient_tp1.begin())) {
+	//// TODO:
+	//// • search in all planes, not just the last one
+	//if (_previous_gradient.size() > 0 && std::equal(_previous_gradient.begin(), _previous_gradient.end(), gradient_tp1.begin())) {
 
-		LOG_DEBUG(proxbundlemethodlog) << "  trying to add previous hyperplane again -- skip it" << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "  trying to add previous hyperplane again -- skip it" << std::endl;
 
-		return false;
+		//return false;
 
-	} else {
+	//} else {
 
-		_previous_gradient = gradient_tp1;
+		//_previous_gradient = gradient_tp1;
 
-		LOG_DEBUG(proxbundlemethodlog) << "  adding new hyperplane" << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "  adding new hyperplane" << std::endl;
 
-		// offset b_i = ξ' - <g',x>
-		double b = value - dot(gradient_tp1, position);
+		//// offset b_i = ξ' - <g',x>
+		//double b = value - dot(gradient_tp1, position);
 
-		// append g_i to A and b_i to b
+		//// append g_i to A and b_i to b
 
-		GRBLinExpr expr;
-		expr.addTerms(&gradient_tp1[0], _variables, gradient_tp1.size());
-		expr -= _slack;
+		//GRBLinExpr expr;
+		//expr.addTerms(&gradient_tp1[0], _variables, gradient_tp1.size());
+		//expr -= _slack;
 
-		_model.addConstr(expr, GRB_GREATER_EQUAL, -b);
-		_model.update();
+		//_model.addConstr(expr, GRB_GREATER_EQUAL, -b);
+		//_model.update();
 
-		return true;
-	}
+		//return true;
+	//}
 }
 
 template <typename ValueGradientCallback>
 void
 ProximalBundleMethod<ValueGradientCallback>::solveQP(std::vector<double>& position, double& value, double& qpValue) {
 
-	// solve max ξ - regularizer, s.t. Ax - b ≤ ξ
-	_model.optimize();
+	//// solve max ξ - regularizer, s.t. Ax - b ≤ ξ
+	//_model.optimize();
 
-	int status = _model.get(GRB_IntAttr_Status);
-	if (status != GRB_OPTIMAL) {
+	//int status = _model.get(GRB_IntAttr_Status);
+	//if (status != GRB_OPTIMAL) {
 
-		LOG_DEBUG(proxbundlemethodlog) << "ERROR: bundle method could not find optimal value of ℒ(λ)!" << std::endl;
+		//LOG_DEBUG(proxbundlemethodlog) << "ERROR: bundle method could not find optimal value of ℒ(λ)!" << std::endl;
 
-		UTIL_THROW_EXCEPTION(BundleCannotSolveQpException, "");
-	}
+		//UTIL_THROW_EXCEPTION(BundleCannotSolveQpException, "");
+	//}
 
-	// λ^(t+1)
-	for (unsigned int i = 0; i < _numDims; i++)
-		position[i] = _variables[i].get(GRB_DoubleAttr_X);
+	//// λ^(t+1)
+	//for (unsigned int i = 0; i < _numDims; i++)
+		//position[i] = _variables[i].get(GRB_DoubleAttr_X);
 
-	// ℒ(λ^(t+1))
-	value = _slack.get(GRB_DoubleAttr_X);
+	//// ℒ(λ^(t+1))
+	//value = _slack.get(GRB_DoubleAttr_X);
 
-	// ℒ(λ^(t+1)) - ρ/2*|λ'-λ|^2
-	qpValue = _model.get(GRB_DoubleAttr_ObjVal);
+	//// ℒ(λ^(t+1)) - ρ/2*|λ'-λ|^2
+	//qpValue = _model.get(GRB_DoubleAttr_ObjVal);
 }
 
 template <typename ValueGradientCallback>
