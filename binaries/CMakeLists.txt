@@ -2,5 +2,5 @@ define_module(host             BINARY SOURCES host.cpp             LINKS inferen
 define_module(create_project   BINARY SOURCES create_project.cpp   LINKS volumes)
 define_module(extract_tubes    BINARY SOURCES extract_tubes.cpp    LINKS tubes)
 define_module(extract_features BINARY SOURCES extract_features.cpp LINKS tubes)
-define_module(tube_viewer      BINARY SOURCES tube_viewer.cpp      LINKS tubes sg_gui)
+define_module(tube_viewer      BINARY SOURCES tube_viewer.cpp      LINKS tubes tubes_gui)
 define_module(export_skeleton  BINARY SOURCES export_skeleton.cpp  LINKS tubes)

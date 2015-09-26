@@ -1,10 +1,17 @@
 #include "SkeletonView.h"
 #include <sg_gui/OpenGl.h>
 #include <sg_gui/Colors.h>
+#include <util/ProgramOptions.h>
+
+util::ProgramOption optionSkeletonSphereScale(
+		util::_module           = "gui",
+		util::_long_name        = "skeletonSphereScale",
+		util::_description_text = "The initial scale of the skeleton spheres to show. Default is 1.",
+		util::_default_value    = 1.0);
 
 SkeletonView::SkeletonView() :
 	_sphere(10),
-	_sphereScale(1.0) {}
+	_sphereScale(optionSkeletonSphereScale) {}
 
 void
 SkeletonView::setSkeletons(std::shared_ptr<Skeletons> skeletons) {
